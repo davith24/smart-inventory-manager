@@ -27,6 +27,7 @@ import ItemDetailPage from "./pages/customer/ItemDetailPage";
 import MenuPage from "./pages/customer/MenuPage";
 import { CartProvider } from "./contexts/CartContext"; // Cart Context
 import QRCodeGenerator from "./pages/customer/QRCodePage"
+import SalesPage from "./pages/client/SalesPage"
 
 
 const App = () => {
@@ -49,6 +50,7 @@ const App = () => {
             <Route path="/menu/:id" element={<MenuPage />} />
             <Route path="/item/:id" element={<ItemDetailPage />} />
             <Route path="/cart" element={<CartPage />} /> {/* Added CartPage */}
+            <Route path="/Sales" element={<SalesPage/>} /> 
            
             <Route path="/QRCodePage" element={<QRCodeGenerator/>} />
             {/* Client */}

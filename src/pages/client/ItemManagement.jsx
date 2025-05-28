@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
+  Card,
+  Typography,
   Button,
-  TextField,
-  MenuItem,
   Table,
   TableBody,
   TableCell,
@@ -11,1020 +11,542 @@ import {
   TableHead,
   TableRow,
   Paper,
-  IconButton,
-  Chip,
-  Typography,
+  TextField,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
-  Tooltip,
-  TablePagination,
+  DialogContent,
+  DialogTitle,
+  Snackbar,
   CircularProgress,
+  IconButton,
   Alert,
-  InputAdornment,
-  LinearProgress,
+  Tooltip,
   Avatar,
-  Card,
-  CardContent,
-  Divider,
-  Grid,
-  useTheme
+  Chip,
+  MenuItem,
+  Select,
+  InputAdornment,
 } from "@mui/material";
-import { Edit, Add, Close, CloudUpload } from "@mui/icons-material";
-import DeleteTwoToneIcon from "@mui/icons-material/DeleteTwoTone";
-import { Helmet } from "react-helmet";
+import {
+  Edit,
+  Delete,
+  Search,
+  Add,
+  Inventory,
+  CheckCircle,
+  Cancel,
+  Warning,
+} from "@mui/icons-material";
+import { styled } from "@mui/system";
 import MainLayout from "../../layouts/MainLayout";
-import { useSelector } from "react-redux";
 import api from "../../api/axiosConfig";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { storage } from "../../firebase";
 
-// Constants
-const INITIAL_FORM_STATE = {
-  name: "",
-  description: "",
-  businessId: "",
-  category: "",
-  image: null,
-  price: "",
-  status: "active",
+const LOW_STOCK_THRESHOLD = 10;
+
+const StockIndicator = ({ quantity, reorderLevel }) => {
+  if (quantity === 0) {
+    return (
+      <Chip
+        label="Out of stock"
+        color="error"
+        size="small"
+        icon={<Cancel />}
+      />
+    );
+  } else if (quantity <= reorderLevel) {
+    return (
+      <Chip
+        label={`Low stock (${quantity})`}
+        color="warning"
+        size="small"
+        icon={<Warning />}
+      />
+    );
+  }
+  return (
+    <Chip
+      label={`In stock (${quantity})`}
+      color="success"
+      size="small"
+      icon={<CheckCircle />}
+    />
+  );
 };
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-
-// Sub-components
-const ConfirmDialog = ({ message, onConfirm, onClose, open }) => (
-  <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-    <DialogTitle sx={{ bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }}>
-      Confirm Deletion
-    </DialogTitle>
-    <DialogContent sx={{ p: 3 }}>
-      <Typography variant="body1">{message}</Typography>
-    </DialogContent>
-    <DialogActions sx={{ p: 2, bgcolor: 'background.default' }}>
-      <Button onClick={onClose} variant="outlined" color="inherit">
-        Cancel
-      </Button>
-      <Button variant="contained" color="error" onClick={onConfirm}>
-        Delete
-      </Button>
-    </DialogActions>
-  </Dialog>
-);
-
-const ItemManagement = () => {
-  const theme = useTheme();
-  const { currentUser } = useSelector((state) => state.user);
-  const user = currentUser?.user;
-
-  // State management
-  const [state, setState] = useState({
-    items: [],
-    businesses: [],
-    categories: [],
-    dialogCategories: [],
-    totalItems: 0,
-    pageNumber: 1,
-    pageSize: 10,
-    searchQuery: "",
+const InventoryManagement = () => {
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [dialogLoading, setDialogLoading] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [currentProduct, setCurrentProduct] = useState(null);
+  const [filters, setFilters] = useState({
+    name: "",
+    sku: "",
+    categoryId: "",
+  });
+  const [notification, setNotification] = useState({
     open: false,
-    confirmOpen: false,
-    deleteId: null,
-    editingItem: null,
-    form: INITIAL_FORM_STATE,
-    formErrors: {},
-    isSubmitting: false,
-    isLoading: false,
-    error: null,
-    uploadProgress: 0,
-    isUploading: false,
-    filters: {
-      status: "All",
-      business: "",
-      category: "",
-    }
+    message: "",
+    severity: "success",
   });
 
-  // Destructure state for easier access
-  const {
-    items, businesses, categories, dialogCategories, totalItems,
-    pageNumber, pageSize, searchQuery, open, confirmOpen, deleteId,
-    editingItem, form, formErrors, isSubmitting, isLoading, error,
-    uploadProgress, isUploading, filters
-  } = state;
-
-  // Memoized filtered items
-  const filteredItems = useMemo(() => {
-    return items.filter((item) => {
-      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesBusiness = !filters.business || item.businessId?._id === filters.business;
-      const matchesCategory = !filters.category || item.categoryId?._id === filters.category;
-      return matchesSearch && matchesBusiness && matchesCategory;
-    });
-  }, [items, searchQuery, filters.business, filters.category]);
-
-  // API calls
-  const fetchItems = useCallback(async () => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
-    
-    const params = {
-      page: pageNumber,
-      size: pageSize,
-      userId: user?._id,
-      search: searchQuery,
-      businessId: filters.business || undefined,
-      categoryId: filters.category || undefined,
-    };
-
+  const fetchProducts = useCallback(async () => {
+    setLoading(true);
     try {
-      const response = await api.get("/api/v1/items", { params });
-      const data = response.data.data;
-      setState(prev => ({
-        ...prev,
-        items: data.data || [],
-        totalItems: data.total || 0,
-        isLoading: false
-      }));
-    } catch (err) {
-      setState(prev => ({
-        ...prev,
-        error: `Failed to fetch items: ${err.response?.data?.message || err.message}`,
-        items: [],
-        totalItems: 0,
-        isLoading: false
-      }));
-    }
-  }, [pageNumber, pageSize, searchQuery, filters.business, filters.category, user?._id]);
-
-  const fetchBusinesses = useCallback(async () => {
-    try {
-      const response = await api.get("/api/v1/businesses");
-      setState(prev => ({
-        ...prev,
-        businesses: response.data.data.data || []
-      }));
-    } catch (err) {
-      setState(prev => ({
-        ...prev,
-        error: `Failed to fetch businesses: ${err.response?.data?.message || err.message}`,
-        businesses: []
-      }));
-    }
-  }, []);
-
-  const fetchCategories = useCallback(async (businessId, isDialog = false) => {
-    if (!businessId) {
-      setState(prev => ({
-        ...prev,
-        [isDialog ? 'dialogCategories' : 'categories']: []
-      }));
-      return;
-    }
-
-    try {
-      const response = await api.get(`/api/v1/categories?businessId=${businessId}`);
-      setState(prev => ({
-        ...prev,
-        [isDialog ? 'dialogCategories' : 'categories']: response.data.data.data || [],
-        formErrors: isDialog ? {
-          ...prev.formErrors,
-          category: response.data.data.data?.length ? null : "No categories available"
-        } : prev.formErrors
-      }));
-    } catch (err) {
-      setState(prev => ({
-        ...prev,
-        [isDialog ? 'dialogCategories' : 'categories']: [],
-        formErrors: isDialog ? {
-          ...prev.formErrors,
-          category: "Could not load categories"
-        } : prev.formErrors
-      }));
-    }
-  }, []);
-
-  // Effects
-  useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
-
-  useEffect(() => {
-    fetchBusinesses();
-  }, [fetchBusinesses]);
-
-  useEffect(() => {
-    if (filters.business) {
-      fetchCategories(filters.business);
-      setState(prev => ({
-        ...prev,
-        filters: {
-          ...prev.filters,
-          category: ""
-        }
-      }));
-    } else {
-      setState(prev => ({
-        ...prev,
-        categories: []
-      }));
-    }
-  }, [filters.business, fetchCategories]);
-
-  useEffect(() => {
-    if (form.businessId) {
-      fetchCategories(form.businessId, true);
-    } else {
-      setState(prev => ({
-        ...prev,
-        dialogCategories: []
-      }));
-    }
-  }, [form.businessId, fetchCategories]);
-
-  // Handlers
-  const handleFormChange = (e) => {
-    const { name, value } = e.target;
-    
-    setState(prev => {
-      const newForm = { ...prev.form, [name]: value };
-      if (name === "businessId") {
-        newForm.category = "";
-      }
-      
-      return {
-        ...prev,
-        form: newForm,
-        formErrors: prev.formErrors[name] ? {
-          ...prev.formErrors,
-          [name]: null
-        } : prev.formErrors
-      };
-    });
-  };
-
-  const uploadImage = async (file) => {
-    if (!file) throw new Error("No file selected");
-    
-    setState(prev => ({
-      ...prev,
-      isUploading: true,
-      uploadProgress: 0
-    }));
-
-    const storageRef = ref(storage, `vd-menu/${Date.now()}_${file.name}`);
-    const uploadTask = uploadBytesResumable(storageRef, file);
-
-    return new Promise((resolve, reject) => {
-      uploadTask.on(
-        "state_changed",
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setState(prev => ({ ...prev, uploadProgress: progress }));
-        },
-        (error) => {
-          setState(prev => ({
-            ...prev,
-            isUploading: false,
-            uploadProgress: 0
-          }));
-          reject(error);
-        },
-        async () => {
-          try {
-            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            setState(prev => ({
-              ...prev,
-              isUploading: false,
-              uploadProgress: 100
-            }));
-            resolve(downloadURL);
-          } catch (error) {
-            setState(prev => ({
-              ...prev,
-              isUploading: false,
-              uploadProgress: 0
-            }));
-            reject(error);
-          }
-        }
-      );
-    });
-  };
-
-  const handleImageChange = async (e) => {
-    const file = e.target.files[0];
-    
-    setState(prev => ({
-      ...prev,
-      formErrors: {
-        ...prev.formErrors,
-        image: null
-      }
-    }));
-
-    if (!file) return;
-
-    // Validate file
-    if (file.size > MAX_FILE_SIZE) {
-      setState(prev => ({
-        ...prev,
-        formErrors: {
-          ...prev.formErrors,
-          image: "File size must be under 5MB."
-        }
-      }));
-      return;
-    }
-
-    if (!file.type.startsWith("image/")) {
-      setState(prev => ({
-        ...prev,
-        formErrors: {
-          ...prev.formErrors,
-          image: "Invalid file type. Please select an image."
-        }
-      }));
-      return;
-    }
-
-    try {
-      const imageUrl = await uploadImage(file);
-      setState(prev => ({
-        ...prev,
-        form: {
-          ...prev.form,
-          image: imageUrl
-        }
-      }));
+      const response = await api.get("api/v1/products");
+      setProducts(response.data.data || []);
     } catch (error) {
-      setState(prev => ({
-        ...prev,
-        formErrors: {
-          ...prev.formErrors,
-          image: `Upload failed: ${error.message}`
-        },
-        form: {
-          ...prev.form,
-          image: null
-        }
-      }));
-      e.target.value = null;
+      console.error("Failed to fetch products:", error);
+      setNotification({
+        open: true,
+        message: `Failed to fetch products: ${error.message || "Unknown error"}`,
+        severity: "error",
+      });
+      setProducts([]);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
-  const validateForm = () => {
-    const errors = {};
-    if (!form.businessId) errors.businessId = "Business is required";
-    if (!form.category) errors.category = "Category is required";
-    if (!form.name.trim()) errors.name = "Name is required";
-    if (!form.description.trim()) errors.description = "Description is required";
+  const fetchCategories = useCallback(async () => {
+    try {
+      const response = await api.get("api/v1/categories");
+      setCategories(response.data.data || []);
+    } catch (error) {
+      console.error("Failed to fetch categories:", error);
+      setNotification({
+        open: true,
+        message: `Failed to fetch categories: ${error.message || "Unknown error"}`,
+        severity: "error",
+      });
+      setCategories([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchProducts();
+    fetchCategories();
+  }, [fetchProducts, fetchCategories]);
+
+  const filteredProducts = products?.data?.filter((product) => {
+    const matchesName = product.name?.toLowerCase().includes(filters.name.toLowerCase());
+    const matchesSKU = product.sku?.toLowerCase().includes(filters.sku.toLowerCase());
+    const matchesCategory = filters.categoryId ? product.categoryId === filters.categoryId : true;
     
-    const price = parseFloat(form.price);
-    if (isNaN(price)) {
-      errors.price = "Price must be a number";
-    } else if (price < 0) {
-      errors.price = "Price cannot be negative";
-    }
+    return matchesName && matchesSKU && matchesCategory;
+  });
 
-    setState(prev => ({ ...prev, formErrors: errors }));
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleSubmit = async () => {
-    if (!validateForm()) return;
-
-    setState(prev => ({ ...prev, isSubmitting: true, error: null }));
-
-    const itemData = {
-      name: form.name.trim(),
-      description: form.description.trim(),
-      categoryId: form.category,
-      businessId: form.businessId,
-      price: parseFloat(form.price),
-      status: form.status,
-      ...(form.image && { image: form.image }),
-    };
-
-    try {
-      if (editingItem) {
-        await api.patch(`/api/v1/items/${editingItem._id}`, itemData);
-      } else {
-        await api.post("/api/v1/items", itemData);
-      }
-
-      setState(prev => ({
-        ...prev,
-        open: false,
-        isSubmitting: false
-      }));
-      resetFormAndEditingState();
-      fetchItems();
-    } catch (err) {
-      setState(prev => ({
-        ...prev,
-        error: `Failed to save item: ${err.response?.data?.message || err.message}`,
-        isSubmitting: false
-      }));
-    }
-  };
-
-  const handleEdit = (item) => {
-    setState(prev => ({
-      ...prev,
-      editingItem: item,
-      form: {
-        name: item.name || "",
-        description: item.description || "",
-        businessId: item.businessId?._id || "",
-        category: item.categoryId?._id || "",
-        price: item.price?.toString() || "",
-        status: item.status || "active",
-        image: item.image || null,
-      },
-      formErrors: {},
-      error: null,
-      open: true
-    }));
-  };
-
-  const resetFormAndEditingState = () => {
-    setState(prev => ({
-      ...prev,
-      form: INITIAL_FORM_STATE,
-      editingItem: null,
-      formErrors: {},
-      error: null,
-      dialogCategories: [],
-      uploadProgress: 0,
-      isUploading: false
-    }));
-  };
-
-  const handleDeleteRequest = (itemId) => {
-    setState(prev => ({
-      ...prev,
-      deleteId: itemId,
-      confirmOpen: true,
-      error: null
-    }));
-  };
-
-  const handleDeleteConfirm = async () => {
-    setState(prev => ({ ...prev, error: null }));
-
-    try {
-      await api.delete(`/api/v1/items/${deleteId}`);
-      
-      setState(prev => ({
-        ...prev,
-        confirmOpen: false,
-        deleteId: null
-      }));
-
-      if (items.length === 1 && pageNumber > 1) {
-        setState(prev => ({ ...prev, pageNumber: prev.pageNumber - 1 }));
-      } else {
-        fetchItems();
-      }
-    } catch (err) {
-      setState(prev => ({
-        ...prev,
-        error: `Failed to delete item: ${err.response?.data?.message || err.message}`,
-        confirmOpen: false
-      }));
-    }
+  const handleOpenDialog = (product) => {
+    setCurrentProduct(
+      product
+        ? { ...product }
+        : { 
+            name: "", 
+            sku: "",
+            categoryId: categories.data?.[0]?._id || "",
+            quantity: 0,
+            reorderLevel: 0,
+            price: 0,
+            cost: 0
+          }
+    );
+    setOpenDialog(true);
   };
 
   const handleCloseDialog = () => {
-    setState(prev => ({ ...prev, open: false }));
-    resetFormAndEditingState();
+    setOpenDialog(false);
+    setCurrentProduct(null);
+    setDialogLoading(false);
   };
 
-  const handleOpenAddDialog = () => {
-    resetFormAndEditingState();
-    setState(prev => ({ ...prev, open: true }));
-  };
-
-  const handlePageChange = (event, newPage) => {
-    setState(prev => ({ ...prev, pageNumber: newPage + 1 }));
-  };
-
-  const handleRowsPerPageChange = (event) => {
-    setState(prev => ({
-      ...prev,
-      pageSize: parseInt(event.target.value, 10),
-      pageNumber: 1
+  const handleDialogInputChange = (event) => {
+    const { name, value } = event.target;
+    setCurrentProduct((prevProduct) => ({
+      ...prevProduct,
+      [name]: value,
     }));
   };
 
-  const handleFilterChange = (name, value) => {
-    setState(prev => ({
+  const handleSaveProduct = async () => {
+    setDialogLoading(true);
+    const isEditing = currentProduct && currentProduct._id;
+
+    try {
+      if (isEditing) {
+        await api.patch(`api/v1/products/${currentProduct._id}`, currentProduct);
+      } else {
+        const { _id, ...newProduct } = currentProduct;
+        await api.post("api/v1/products", newProduct);
+      }
+
+      setNotification({
+        open: true,
+        message: isEditing
+          ? "Product updated successfully!"
+          : "New product added successfully!",
+        severity: "success",
+      });
+      handleCloseDialog();
+      await fetchProducts();
+    } catch (error) {
+      console.error("Failed to save product:", error);
+      setNotification({
+        open: true,
+        message: `Failed to save product: ${
+          error.response?.data?.message || error.message || "Unknown error"
+        }`,
+        severity: "error",
+      });
+    } finally {
+      setDialogLoading(false);
+    }
+  };
+
+  const handleDeleteProduct = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this product?")) {
+      return;
+    }
+
+    try {
+      await api.delete(`api/v1/products/${id}`);
+      setNotification({
+        open: true,
+        message: "Product deleted successfully!",
+        severity: "success",
+      });
+      await fetchProducts();
+    } catch (error) {
+      console.error("Failed to delete product:", error);
+      setNotification({
+        open: true,
+        message: `Failed to delete product: ${
+          error.response?.data?.message || error.message || "Unknown error"
+        }`,
+        severity: "error",
+      });
+    }
+  };
+
+  const handleFilterChange = (event) => {
+    const { name, value } = event.target;
+    setFilters(prev => ({
       ...prev,
-      filters: {
-        ...prev.filters,
-        [name]: value,
-        ...(name === 'business' && { category: "" })
-      },
-      pageNumber: 1
+      [name]: value
     }));
+  };
+
+  const handleCloseNotification = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setNotification({ ...notification, open: false });
   };
 
   return (
     <MainLayout>
-      <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
-        <Helmet>
-          <title>Item Management</title>
-        </Helmet>
-        
-        {/* Header Section */}
-        <Card sx={{ mb: 3, boxShadow: theme.shadows[1] }}>
-          <CardContent>
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Typography variant="h5" fontWeight="600" color="text.primary">
-                Item Management
-              </Typography>
-              <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={handleOpenAddDialog}
-                disabled={isLoading || isSubmitting}
-                sx={{
-                  bgcolor: 'primary.main',
-                  '&:hover': { bgcolor: 'primary.dark' }
-                }}
-              >
-                Add Item
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* Error Alert */}
-        {error && (
-          <Alert 
-            severity="error" 
-            sx={{ mb: 3 }}
-            onClose={() => setState(prev => ({ ...prev, error: null }))}
-          >
-            {error}
-          </Alert>
-        )}
-
-        {/* Filter Section */}
-        <Card sx={{ mb: 3, boxShadow: theme.shadows[1] }}>
-          <CardContent>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  fullWidth
-                  label="Search Items"
-                  variant="outlined"
-                  size="small"
-                  value={searchQuery}
-                  onChange={(e) => setState(prev => ({ ...prev, searchQuery: e.target.value }))}
-                  InputProps={{
-                    sx: { borderRadius: 1 }
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  select
-                  fullWidth
-                  label="Filter by Business"
-                  variant="outlined"
-                  size="small"
-                  value={filters.business}
-                  onChange={(e) => handleFilterChange('business', e.target.value)}
-                  disabled={isLoading || businesses.length === 0}
-                >
-                  <MenuItem value="">All Businesses</MenuItem>
-                  {businesses.map((b) => (
-                    <MenuItem key={b._id} value={b._id}>
-                      {b.name}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  select
-                  fullWidth
-                  label="Filter by Category"
-                  variant="outlined"
-                  size="small"
-                  value={filters.category}
-                  onChange={(e) => handleFilterChange('category', e.target.value)}
-                  disabled={isLoading || !filters.business || categories.length === 0}
-                >
-                  <MenuItem value="">All Categories</MenuItem>
-                  {categories.map((c) => (
-                    <MenuItem key={c._id} value={c._id}>
-                      {c.name}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-            </Grid>
-          </CardContent>
-        </Card>
-
-        {/* Items Table */}
-        <Card sx={{ boxShadow: theme.shadows[1] }}>
-          <TableContainer>
-            <Table>
-              <TableHead sx={{ bgcolor: theme.palette.grey[100] }}>
-                <TableRow>
-                  <TableCell sx={{ width: 80 }}>Image</TableCell>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Category</TableCell>
-                  <TableCell>Price</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell align="right">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                      <CircularProgress size={30} sx={{ mr: 1 }} />
-                      <Typography variant="body1">Loading Items...</Typography>
-                    </TableCell>
-                  </TableRow>
-                ) : filteredItems.length > 0 ? (
-                  filteredItems.map((item) => (
-                    <TableRow key={item._id} hover>
-                      <TableCell>
-                        <Avatar
-                          src={item.image}
-                          alt={item.name}
-                          sx={{ width: 48, height: 48 }}
-                          variant="rounded"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Typography fontWeight="medium">
-                          {item.name}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Chip 
-                          label={item.categoryId?.name || "N/A"} 
-                          size="small" 
-                          color="secondary"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Typography color="text.secondary">
-                          ${item.price?.toFixed(2)}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={item.status}
-                          color={item.status === "active" ? "success" : "default"}
-                          size="small"
-                          sx={{ textTransform: "capitalize" }}
-                        />
-                      </TableCell>
-                      <TableCell align="right">
-                        <Tooltip title="Edit">
-                          <IconButton
-                            onClick={() => handleEdit(item)}
-                            size="small"
-                            color="primary"
-                            disabled={isSubmitting}
-                            sx={{ mr: 1 }}
-                          >
-                            <Edit fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Delete">
-                          <IconButton
-                            onClick={() => handleDeleteRequest(item._id)}
-                            size="small"
-                            color="error"
-                            disabled={isSubmitting}
-                          >
-                            <DeleteTwoToneIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                      <Typography variant="body1">
-                        No items found matching your criteria.
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <TablePagination
-            component="div"
-            count={totalItems}
-            page={pageNumber - 1}
-            onPageChange={handlePageChange}
-            rowsPerPage={pageSize}
-            onRowsPerPageChange={handleRowsPerPageChange}
-            rowsPerPageOptions={[5, 10, 25, 50]}
-            sx={{ borderTop: 1, borderColor: 'divider' }}
-          />
-        </Card>
-
-        {/* Add/Edit Dialog */}
-        <Dialog 
-          open={open} 
-          onClose={handleCloseDialog} 
-          fullWidth 
-          maxWidth="sm"
-          PaperProps={{
-            sx: {
-              borderRadius: 2
-            }
+      <Box sx={{ p: 3 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 3,
           }}
         >
-          <DialogTitle sx={{ 
-            bgcolor: 'primary.main', 
-            color: 'primary.contrastText',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            {editingItem ? "Edit Item" : "Add New Item"}
-            <IconButton
-              onClick={handleCloseDialog}
-              disabled={isSubmitting || isUploading}
-              color="inherit"
+          <Typography variant="h4" sx={{ fontWeight: 600 }}>
+            Product Inventory
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={() => handleOpenDialog(null)}
+            sx={{
+              bgcolor: "primary.main",
+              "&:hover": { bgcolor: "primary.dark" },
+            }}
+          >
+            Add Product
+          </Button>
+        </Box>
+
+        <Card sx={{ p: 2, mb: 3, borderRadius: 2 }}>
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+            <TextField
+              variant="outlined"
+              label="Search by name"
+              name="name"
+              value={filters.name}
+              onChange={handleFilterChange}
+              sx={{ flex: 1 }}
+              InputProps={{
+                startAdornment: (
+                  <Search sx={{ color: "action.active", mr: 1 }} />
+                ),
+              }}
+            />
+            <TextField
+              variant="outlined"
+              label="Search by SKU"
+              name="sku"
+              value={filters.sku}
+              onChange={handleFilterChange}
+              sx={{ flex: 1 }}
+            />
+            <Select
+              label="Category"
+              name="categoryId"
+              value={filters.categoryId}
+              onChange={handleFilterChange}
+              displayEmpty
+              sx={{ flex: 1 }}
             >
-              <Close />
-            </IconButton>
+              <MenuItem value="">All Categories</MenuItem>
+              {categories?.data?.map((category) => (
+                <MenuItem key={category._id} value={category._id}>
+                  {category.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </Box>
+        </Card>
+
+        {loading ? (
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              minHeight: "300px",
+            }}
+          >
+            <CircularProgress />
+          </Box>
+        ) : (
+          <Card sx={{ borderRadius: 2, overflow: "hidden" }}>
+            <TableContainer>
+              <Table>
+                <TableHead sx={{ bgcolor: "background.default" }}>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>SKU</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Category</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }} align="right">Price</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }} align="right">Cost</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Stock</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {filteredProducts?.length > 0 ? (
+                    filteredProducts.map((product) => {
+                      const category = categories.data?.find(c => c._id === product.categoryId);
+                      return (
+                        <TableRow
+                          key={product._id}
+                          hover
+                          sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                        >
+                          <TableCell>
+                            <Box sx={{ display: "flex", alignItems: "center" }}>
+                              <Avatar sx={{ bgcolor: "primary.main", mr: 2 }}>
+                                <Inventory />
+                              </Avatar>
+                              <Typography fontWeight="medium">{product.name}</Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            {product.sku}
+                          </TableCell>
+                          <TableCell>
+                            <Chip 
+                              label={category?.name || 'Uncategorized'} 
+                              size="small" 
+                              variant="outlined"
+                            />
+                          </TableCell>
+                          <TableCell align="right">
+                            ${product.price?.toFixed(2)}
+                          </TableCell>
+                          <TableCell align="right">
+                            ${product.cost?.toFixed(2)}
+                          </TableCell>
+                          <TableCell>
+                            <StockIndicator 
+                              quantity={product.quantity} 
+                              reorderLevel={product.reorderLevel} 
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Tooltip title="Edit">
+                              <IconButton
+                                onClick={() => handleOpenDialog(product)}
+                                color="primary"
+                              >
+                                <Edit />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Delete">
+                              <IconButton
+                                onClick={() => handleDeleteProduct(product._id)}
+                                color="error"
+                              >
+                                <Delete />
+                              </IconButton>
+                            </Tooltip>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                        <Typography color="text.secondary">
+                          No products found
+                        </Typography>
+                        <Button
+                          onClick={() => handleOpenDialog(null)}
+                          startIcon={<Add />}
+                          sx={{ mt: 1 }}
+                        >
+                          Add New Product
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Card>
+        )}
+
+        <Dialog
+          open={openDialog}
+          onClose={handleCloseDialog}
+          fullWidth
+          maxWidth="sm"
+        >
+          <DialogTitle sx={{ bgcolor: "primary.main", color: "white" }}>
+            {currentProduct?._id ? "Edit Product" : "Add New Product"}
+            <Inventory sx={{ ml: 1, verticalAlign: "middle" }} />
           </DialogTitle>
           <DialogContent sx={{ pt: 3 }}>
-            {error && (
-              <Alert severity="error" sx={{ mb: 3 }} onClose={() => setState(prev => ({ ...prev, error: null }))}>
-                {error}
-              </Alert>
-            )}
-            
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  select
-                  fullWidth
-                  label="Business"
-                  name="businessId"
-                  value={form.businessId}
-                  onChange={handleFormChange}
-                  required
-                  error={!!formErrors.businessId}
-                  helperText={formErrors.businessId}
-                  disabled={isSubmitting || isLoading || editingItem}
-                  size="small"
-                  sx={{ mb: 2 }}
-                >
-                  <MenuItem value="" disabled>
-                    Select a Business
-                  </MenuItem>
-                  {businesses.map((bus) => (
-                    <MenuItem key={bus._id} value={bus._id}>
-                      {bus.name}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  select
-                  fullWidth
-                  label="Category"
-                  name="category"
-                  value={form.category}
-                  onChange={handleFormChange}
-                  required
-                  error={!!formErrors.category}
-                  helperText={formErrors.category}
-                  disabled={isSubmitting || !form.businessId || dialogCategories.length === 0}
-                  size="small"
-                  sx={{ mb: 2 }}
-                >
-                  <MenuItem value="" disabled>
-                    Select a Category
-                  </MenuItem>
-                  {dialogCategories.map((cat) => (
-                    <MenuItem key={cat._id} value={cat._id}>
-                      {cat.name}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Item Name"
-                  name="name"
-                  value={form.name}
-                  onChange={handleFormChange}
-                  required
-                  error={!!formErrors.name}
-                  helperText={formErrors.name}
-                  disabled={isSubmitting}
-                  size="small"
-                  sx={{ mb: 2 }}
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Description"
-                  name="description"
-                  value={form.description}
-                  onChange={handleFormChange}
-                  required
-                  multiline
-                  rows={3}
-                  error={!!formErrors.description}
-                  helperText={formErrors.description}
-                  disabled={isSubmitting}
-                  size="small"
-                  sx={{ mb: 2 }}
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <Card variant="outlined" sx={{ p: 2, mb: 2 }}>
-                  <Typography variant="subtitle2" gutterBottom>
-                    Item Image
-                  </Typography>
-                  
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      p: 2,
-                      border: '1px dashed',
-                      borderColor: 'divider',
-                      borderRadius: 1,
-                      bgcolor: 'background.default'
-                    }}
-                  >
-                    {form.image ? (
-                      <>
-                        <Box
-                          component="img"
-                          src={form.image}
-                          alt="Preview"
-                          sx={{
-                            maxHeight: 150,
-                            maxWidth: '100%',
-                            mb: 2,
-                            borderRadius: 1
-                          }}
-                        />
-                        <Button
-                          variant="outlined"
-                          color="error"
-                          onClick={() => setState(prev => ({
-                            ...prev,
-                            form: {
-                              ...prev.form,
-                              image: null
-                            }
-                          }))}
-                          disabled={isSubmitting}
-                        >
-                          Remove Image
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <CloudUpload fontSize="large" color="action" sx={{ mb: 1 }} />
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                          Drag and drop an image here, or click to select
-                        </Typography>
-                        <Button
-                          variant="contained"
-                          component="label"
-                          disabled={isSubmitting || isUploading}
-                        >
-                          Upload Image
-                          <input
-                            type="file"
-                            hidden
-                            accept="image/*"
-                            onChange={handleImageChange}
-                          />
-                        </Button>
-                        <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
-                          Max file size: 5MB
-                        </Typography>
-                      </>
-                    )}
-                  </Box>
-
-                  {isUploading && (
-                    <Box sx={{ width: '100%', mt: 2 }}>
-                      <LinearProgress variant="determinate" value={uploadProgress} />
-                      <Typography variant="caption" display="block" textAlign="center">
-                        Uploading: {Math.round(uploadProgress)}%
-                      </Typography>
-                    </Box>
-                  )}
-
-                  {formErrors.image && (
-                    <Typography color="error" variant="caption">
-                      {formErrors.image}
-                    </Typography>
-                  )}
-                </Card>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Price"
-                  name="price"
-                  type="number"
-                  value={form.price}
-                  onChange={handleFormChange}
-                  required
-                  error={!!formErrors.price}
-                  helperText={formErrors.price}
-                  disabled={isSubmitting}
-                  size="small"
-                  InputProps={{
-                    startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                    inputProps: { step: "0.01", min: "0" },
-                  }}
-                  sx={{ mb: 2 }}
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  select
-                  fullWidth
-                  label="Status"
-                  name="status"
-                  value={form.status}
-                  onChange={handleFormChange}
-                  disabled={isSubmitting}
-                  size="small"
-                  sx={{ mb: 2 }}
-                >
-                  {["active", "inactive"].map((opt) => (
-                    <MenuItem key={opt} value={opt}>
-                      {opt.charAt(0).toUpperCase() + opt.slice(1)}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-            </Grid>
+            <TextField
+              margin="normal"
+              label="Product Name"
+              fullWidth
+              name="name"
+              value={currentProduct?.name || ""}
+              onChange={handleDialogInputChange}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              margin="normal"
+              label="SKU"
+              fullWidth
+              name="sku"
+              value={currentProduct?.sku || ""}
+              onChange={handleDialogInputChange}
+              sx={{ mb: 2 }}
+            />
+            <Select
+              label="Category"
+              name="categoryId"
+              fullWidth
+              value={currentProduct?.categoryId || ""}
+              onChange={handleDialogInputChange}
+              sx={{ mb: 2 }}
+            >
+              {categories?.data?.map((category) => (
+                <MenuItem key={category._id} value={category._id}>
+                  {category.name}
+                </MenuItem>
+              ))}
+            </Select>
+            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+              <TextField
+                label="Price"
+                fullWidth
+                type="number"
+                name="price"
+                value={currentProduct?.price || 0}
+                onChange={handleDialogInputChange}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                }}
+              />
+              <TextField
+                label="Cost"
+                fullWidth
+                type="number"
+                name="cost"
+                value={currentProduct?.cost || 0}
+                onChange={handleDialogInputChange}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                }}
+              />
+            </Box>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                label="Quantity"
+                fullWidth
+                type="number"
+                name="quantity"
+                value={currentProduct?.quantity || 0}
+                onChange={handleDialogInputChange}
+              />
+              <TextField
+                label="Reorder Level"
+                fullWidth
+                type="number"
+                name="reorderLevel"
+                value={currentProduct?.reorderLevel || 0}
+                onChange={handleDialogInputChange}
+              />
+            </Box>
           </DialogContent>
-          <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
+          <DialogActions sx={{ p: 2 }}>
             <Button
               onClick={handleCloseDialog}
-              disabled={isSubmitting || isUploading}
-              variant="outlined"
+              color="inherit"
+              disabled={dialogLoading}
             >
               Cancel
             </Button>
             <Button
+              onClick={handleSaveProduct}
+              color="primary"
               variant="contained"
-              onClick={handleSubmit}
-              disabled={isSubmitting || isUploading}
-              sx={{ minWidth: 120 }}
+              disabled={dialogLoading}
+              startIcon={
+                dialogLoading ? (
+                  <CircularProgress size={20} color="inherit" />
+                ) : null
+              }
             >
-              {isSubmitting ? (
-                <CircularProgress size={24} color="inherit" />
-              ) : editingItem ? (
-                "Update Item"
-              ) : (
-                "Add Item"
-              )}
+              {currentProduct?._id ? "Update" : "Create"}
             </Button>
           </DialogActions>
         </Dialog>
 
-        {/* Confirmation Dialog */}
-        <ConfirmDialog
-          open={confirmOpen}
-          message="Are you sure you want to delete this item? This action cannot be undone."
-          onConfirm={handleDeleteConfirm}
-          onClose={() => setState(prev => ({ ...prev, confirmOpen: false }))}
-        />
+        <Snackbar
+          open={notification.open}
+          autoHideDuration={6000}
+          onClose={handleCloseNotification}
+          anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        >
+          <Alert
+            onClose={handleCloseNotification}
+            severity={notification.severity}
+            sx={{ width: "100%" }}
+          >
+            {notification.message}
+          </Alert>
+        </Snackbar>
       </Box>
     </MainLayout>
   );
 };
 
-export default ItemManagement;
+export default InventoryManagement;

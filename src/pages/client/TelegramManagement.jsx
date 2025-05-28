@@ -23,40 +23,25 @@ import {
   MenuItem,
   Tooltip,
   Avatar,
-  Chip,
 } from "@mui/material";
 import {
   Edit,
   Delete,
   Search,
   Add,
-  Telegram,
+  Person,
   CheckCircle,
   Cancel,
 } from "@mui/icons-material";
-import { styled } from "@mui/system";
 import MainLayout from "../../layouts/MainLayout";
 import api from "../../api/axiosConfig";
 
-const FORM_STATUS_OPTIONS = ["active", "inactive"];
-
-const StatusChip = ({ status }) => {
-  return (
-    <Chip
-      label={status}
-      color={status === "active" ? "success" : "error"}
-      size="small"
-      icon={status === "active" ? <CheckCircle /> : <Cancel />}
-    />
-  );
-};
-
-const TelegramManagement = () => {
-  const [telegrams, setTelegrams] = useState([]);
+const CustomerManagement = () => {
+  const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [dialogLoading, setDialogLoading] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentCustomer, setCurrentCustomer] = useState(null);
   const [filter, setFilter] = useState("");
   const [notification, setNotification] = useState({
     open: false,
@@ -64,84 +49,86 @@ const TelegramManagement = () => {
     severity: "success",
   });
 
-  const fetchTelegrams = useCallback(async () => {
+  const fetchCustomers = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await api.get("api/v1/telegrams");
-      setTelegrams(response.data.data || []);
+      const response = await api.get("api/v1/customers");
+      setCustomers(response.data.data);
+      console.log(response.data.data)
     } catch (error) {
-      console.error("Failed to fetch telegrams:", error);
+      console.error("Failed to fetch customers:", error);
       setNotification({
         open: true,
-        message: `Failed to fetch telegrams: ${error.message || "Unknown error"}`,
+        message: `Failed to fetch customers: ${error.message || "Unknown error"}`,
         severity: "error",
       });
-      setTelegrams([]);
+      setCustomers([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchTelegrams();
-  }, [fetchTelegrams]);
+    fetchCustomers();
+  }, [fetchCustomers]);
 
-  const filteredTelegrams = telegrams?.data?.filter(
-    (user) =>
-      user.name?.toLowerCase().includes(filter.toLowerCase()) ||
-      user.username?.toLowerCase().includes(filter.toLowerCase()) ||
-      user.status?.toLowerCase().includes(filter.toLowerCase())
+  const filteredCustomers = customers?.data?.filter(
+    (customer) =>
+      customer.name?.toLowerCase().includes(filter.toLowerCase()) ||
+      customer.phone?.toLowerCase().includes(filter.toLowerCase()) ||
+      customer.email?.toLowerCase().includes(filter.toLowerCase()) ||
+      customer.address?.toLowerCase().includes(filter.toLowerCase())
   );
 
-  const handleOpenDialog = (user) => {
-    setCurrentUser(
-      user
-        ? { ...user }
-        : { name: "", username: "", phoneNumber: "", status: "active" }
+  const handleOpenDialog = (customer) => {
+    setCurrentCustomer(
+      customer
+        ? { ...customer }
+        : { name: "", phone: "", email: "", address: "", note: "" }
     );
     setOpenDialog(true);
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
-    setCurrentUser(null);
+    setCurrentCustomer(null);
     setDialogLoading(false);
   };
 
   const handleDialogInputChange = (event) => {
     const { name, value } = event.target;
-    setCurrentUser((prevUser) => ({
-      ...prevUser,
+    setCurrentCustomer((prevCustomer) => ({
+      ...prevCustomer,
       [name]: value,
     }));
   };
 
-  const handleSaveUser = async () => {
+  const handleSaveCustomer = async () => {
     setDialogLoading(true);
-    const isEditing = currentUser && currentUser._id;
+    const isEditing = currentCustomer && currentCustomer._id;
 
     try {
       if (isEditing) {
-        await api.patch(`api/v1/telegrams/${currentUser._id}`, currentUser);
+        await api.patch(`api/v1/customers/${currentCustomer._id}`, currentCustomer);
       } else {
-        const { _id, ...newUser } = currentUser;
-        await api.post("api/v1/telegrams", newUser);
+        const { _id, ...newCustomer } = currentCustomer;
+        await api.post("api/v1/customers", newCustomer);
       }
 
       setNotification({
         open: true,
         message: isEditing
-          ? "Telegram account updated successfully!"
-          : "New Telegram account added successfully!",
+          ? "Customer updated successfully!"
+          : "New customer added successfully!",
         severity: "success",
       });
       handleCloseDialog();
-      await fetchTelegrams();
+      await fetchCustomers();
     } catch (error) {
-      console.error("Failed to save Telegram account:", error);
+      console.error("Failed to save customer:", error);
       setNotification({
         open: true,
-        message: `Failed to save Telegram account: ${
+        message: `Failed to save customer: ${
           error.response?.data?.message || error.message || "Unknown error"
         }`,
         severity: "error",
@@ -151,24 +138,24 @@ const TelegramManagement = () => {
     }
   };
 
-  const handleDeleteUser = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this Telegram account?")) {
+  const handleDeleteCustomer = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this customer?")) {
       return;
     }
 
     try {
-      await api.delete(`api/v1/telegrams/${id}`);
+      await api.delete(`api/v1/customers/${id}`);
       setNotification({
         open: true,
-        message: "Telegram account deleted successfully!",
+        message: "Customer deleted successfully!",
         severity: "success",
       });
-      await fetchTelegrams();
+      await fetchCustomers();
     } catch (error) {
-      console.error("Failed to delete Telegram account:", error);
+      console.error("Failed to delete customer:", error);
       setNotification({
         open: true,
-        message: `Failed to delete Telegram account: ${
+        message: `Failed to delete customer: ${
           error.response?.data?.message || error.message || "Unknown error"
         }`,
         severity: "error",
@@ -195,7 +182,7 @@ const TelegramManagement = () => {
           }}
         >
           <Typography variant="h4" sx={{ fontWeight: 600 }}>
-            Telegram Accounts
+            Customer Management
           </Typography>
           <Button
             variant="contained"
@@ -206,14 +193,14 @@ const TelegramManagement = () => {
               "&:hover": { bgcolor: "primary.dark" },
             }}
           >
-            Add Account
+            Add Customer
           </Button>
         </Box>
 
         <Card sx={{ p: 2, mb: 3, borderRadius: 2 }}>
           <TextField
             variant="outlined"
-            label="Search accounts..."
+            label="Search customers..."
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             fullWidth
@@ -242,42 +229,42 @@ const TelegramManagement = () => {
               <Table>
                 <TableHead sx={{ bgcolor: "background.default" }}>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 600 }}>Account</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Username</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Phone</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Email</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Address</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Note</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {filteredTelegrams?.length > 0 ? (
-                    filteredTelegrams.map((telegram) => (
+                  {filteredCustomers?.length > 0 ? (
+                    filteredCustomers.map((customer) => (
                       <TableRow
-                        key={telegram._id}
+                        key={customer._id}
                         hover
                         sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                       >
                         <TableCell>
                           <Box sx={{ display: "flex", alignItems: "center" }}>
                             <Avatar sx={{ bgcolor: "primary.main", mr: 2 }}>
-                              <Telegram />
+                              <Person />
                             </Avatar>
-                            <Typography>{telegram.name}</Typography>
+                            <Typography>{customer.name}</Typography>
                           </Box>
                         </TableCell>
+                        <TableCell>{customer.phone}</TableCell>
+                        <TableCell>{customer.email}</TableCell>
                         <TableCell>
                           <Typography color="text.secondary">
-                            @{telegram.username}
+                            {customer.address}
                           </Typography>
                         </TableCell>
-                        <TableCell>{telegram.phoneNumber}</TableCell>
-                        <TableCell>
-                          <StatusChip status={telegram.status} />
-                        </TableCell>
+                        <TableCell>{customer.note}</TableCell>
                         <TableCell>
                           <Tooltip title="Edit">
                             <IconButton
-                              onClick={() => handleOpenDialog(telegram)}
+                              onClick={() => handleOpenDialog(customer)}
                               color="primary"
                             >
                               <Edit />
@@ -285,7 +272,7 @@ const TelegramManagement = () => {
                           </Tooltip>
                           <Tooltip title="Delete">
                             <IconButton
-                              onClick={() => handleDeleteUser(telegram._id)}
+                              onClick={() => handleDeleteCustomer(customer._id)}
                               color="error"
                             >
                               <Delete />
@@ -296,16 +283,16 @@ const TelegramManagement = () => {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                      <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                         <Typography color="text.secondary">
-                          No Telegram accounts found
+                          No customers found
                         </Typography>
                         <Button
                           onClick={() => handleOpenDialog(null)}
                           startIcon={<Add />}
                           sx={{ mt: 1 }}
                         >
-                          Add New Account
+                          Add New Customer
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -323,59 +310,57 @@ const TelegramManagement = () => {
           maxWidth="sm"
         >
           <DialogTitle sx={{ bgcolor: "primary.main", color: "white" }}>
-            {currentUser?._id ? "Edit Telegram Account" : "Add New Telegram Account"}
-            <Telegram sx={{ ml: 1, verticalAlign: "middle" }} />
+            {currentCustomer?._id ? "Edit Customer" : "Add New Customer"}
+            <Person sx={{ ml: 1, verticalAlign: "middle" }} />
           </DialogTitle>
           <DialogContent sx={{ pt: 3 }}>
             <TextField
               margin="normal"
-              label="Name"
+              label="Full Name"
               fullWidth
               name="name"
-              value={currentUser?.name || ""}
+              value={currentCustomer?.name || ""}
               onChange={handleDialogInputChange}
               sx={{ mb: 2 }}
-            />
-            <TextField
-              margin="normal"
-              label="Username (without @)"
-              fullWidth
-              name="username"
-              value={currentUser?.username || ""}
-              onChange={handleDialogInputChange}
-              sx={{ mb: 2 }}
-              InputProps={{
-                startAdornment: (
-                  <Typography sx={{ mr: 1 }} color="text.secondary">
-                    @
-                  </Typography>
-                ),
-              }}
             />
             <TextField
               margin="normal"
               label="Phone Number"
               fullWidth
-              name="phoneNumber"
-              value={currentUser?.phoneNumber || ""}
+              name="phone"
+              value={currentCustomer?.phone || ""}
               onChange={handleDialogInputChange}
               sx={{ mb: 2 }}
             />
             <TextField
-              select
-              label="Status"
-              name="status"
+              margin="normal"
+              label="Email"
               fullWidth
-              value={currentUser?.status || "active"}
+              name="email"
+              value={currentCustomer?.email || ""}
               onChange={handleDialogInputChange}
               sx={{ mb: 2 }}
-            >
-              {FORM_STATUS_OPTIONS.map((opt) => (
-                <MenuItem key={opt} value={opt}>
-                  {opt.charAt(0).toUpperCase() + opt.slice(1)}
-                </MenuItem>
-              ))}
-            </TextField>
+            />
+            <TextField
+              margin="normal"
+              label="Address"
+              fullWidth
+              name="address"
+              value={currentCustomer?.address || ""}
+              onChange={handleDialogInputChange}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              margin="normal"
+              label="Notes"
+              fullWidth
+              name="note"
+              value={currentCustomer?.note || ""}
+              onChange={handleDialogInputChange}
+              multiline
+              rows={3}
+              sx={{ mb: 2 }}
+            />
           </DialogContent>
           <DialogActions sx={{ p: 2 }}>
             <Button
@@ -386,7 +371,7 @@ const TelegramManagement = () => {
               Cancel
             </Button>
             <Button
-              onClick={handleSaveUser}
+              onClick={handleSaveCustomer}
               color="primary"
               variant="contained"
               disabled={dialogLoading}
@@ -396,7 +381,7 @@ const TelegramManagement = () => {
                 ) : null
               }
             >
-              {currentUser?._id ? "Update" : "Create"}
+              {currentCustomer?._id ? "Update" : "Create"}
             </Button>
           </DialogActions>
         </Dialog>
@@ -420,4 +405,4 @@ const TelegramManagement = () => {
   );
 };
 
-export default TelegramManagement;
+export default CustomerManagement;
