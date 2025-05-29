@@ -33,8 +33,8 @@ import {
   CheckCircle,
   Cancel,
 } from "@mui/icons-material";
-import MainLayout from "../../layouts/MainLayout";
-import api from "../../api/axiosConfig";
+import MainLayout from "../layouts/MainLayout";
+import api from "../api/axiosConfig";
 
 const CustomerManagement = () => {
   const [customers, setCustomers] = useState([]);
@@ -54,7 +54,6 @@ const CustomerManagement = () => {
     try {
       const response = await api.get("api/v1/customers");
       setCustomers(response.data.data);
-      console.log(response.data.data)
     } catch (error) {
       console.error("Failed to fetch customers:", error);
       setNotification({
@@ -109,7 +108,10 @@ const CustomerManagement = () => {
 
     try {
       if (isEditing) {
-        await api.patch(`api/v1/customers/${currentCustomer._id}`, currentCustomer);
+        await api.put(
+          `api/v1/customers/${currentCustomer._id}`,
+          currentCustomer
+        );
       } else {
         const { _id, ...newCustomer } = currentCustomer;
         await api.post("api/v1/customers", newCustomer);
@@ -205,9 +207,7 @@ const CustomerManagement = () => {
             onChange={(e) => setFilter(e.target.value)}
             fullWidth
             InputProps={{
-              startAdornment: (
-                <Search sx={{ color: "action.active", mr: 1 }} />
-              ),
+              startAdornment: <Search sx={{ color: "action.active", mr: 1 }} />,
             }}
           />
         </Card>
@@ -243,7 +243,9 @@ const CustomerManagement = () => {
                       <TableRow
                         key={customer._id}
                         hover
-                        sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                        sx={{
+                          "&:last-child td, &:last-child th": { border: 0 },
+                        }}
                       >
                         <TableCell>
                           <Box sx={{ display: "flex", alignItems: "center" }}>

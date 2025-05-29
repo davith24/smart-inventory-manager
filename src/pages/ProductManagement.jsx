@@ -38,20 +38,16 @@ import {
   Warning,
 } from "@mui/icons-material";
 import { styled } from "@mui/system";
-import MainLayout from "../../layouts/MainLayout";
-import api from "../../api/axiosConfig";
+import MainLayout from "../layouts/MainLayout";
+import api from "../api/axiosConfig";
+import { formatMoney } from "../components/Format";
 
 const LOW_STOCK_THRESHOLD = 10;
 
 const StockIndicator = ({ quantity, reorderLevel }) => {
   if (quantity === 0) {
     return (
-      <Chip
-        label="Out of stock"
-        color="error"
-        size="small"
-        icon={<Cancel />}
-      />
+      <Chip label="Out of stock" color="error" size="small" icon={<Cancel />} />
     );
   } else if (quantity <= reorderLevel) {
     return (
@@ -73,7 +69,7 @@ const StockIndicator = ({ quantity, reorderLevel }) => {
   );
 };
 
-const InventoryManagement = () => {
+const ProductManagement = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -130,25 +126,36 @@ const InventoryManagement = () => {
   }, [fetchProducts, fetchCategories]);
 
   const filteredProducts = products?.data?.filter((product) => {
-    const matchesName = product.name?.toLowerCase().includes(filters.name.toLowerCase());
-    const matchesSKU = product.sku?.toLowerCase().includes(filters.sku.toLowerCase());
-    const matchesCategory = filters.categoryId ? product.categoryId === filters.categoryId : true;
-    
+    const matchesName = product.name
+      ?.toLowerCase()
+      .includes(filters.name.toLowerCase());
+
+    const matchesSKU = product.sku
+      ?.toLowerCase()
+      .includes(filters.sku.toLowerCase());
+
+    const matchesCategory = filters.categoryId
+      ? product.categoryId._id === filters.categoryId
+      : true;
+
     return matchesName && matchesSKU && matchesCategory;
   });
 
   const handleOpenDialog = (product) => {
     setCurrentProduct(
       product
-        ? { ...product }
-        : { 
-            name: "", 
+        ? {
+            ...product,
+            categoryId: product.categoryId?._id || "",
+          }
+        : {
+            name: "",
             sku: "",
-            categoryId: categories.data?.[0]?._id || "",
+            categoryId: "",
             quantity: 0,
             reorderLevel: 0,
             price: 0,
-            cost: 0
+            cost: 0,
           }
     );
     setOpenDialog(true);
@@ -174,7 +181,10 @@ const InventoryManagement = () => {
 
     try {
       if (isEditing) {
-        await api.patch(`api/v1/products/${currentProduct._id}`, currentProduct);
+        await api.patch(
+          `api/v1/products/${currentProduct._id}`,
+          currentProduct
+        );
       } else {
         const { _id, ...newProduct } = currentProduct;
         await api.post("api/v1/products", newProduct);
@@ -230,9 +240,9 @@ const InventoryManagement = () => {
 
   const handleFilterChange = (event) => {
     const { name, value } = event.target;
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -255,7 +265,7 @@ const InventoryManagement = () => {
           }}
         >
           <Typography variant="h4" sx={{ fontWeight: 600 }}>
-            Product Inventory
+            Product Management
           </Typography>
           <Button
             variant="contained"
@@ -271,7 +281,7 @@ const InventoryManagement = () => {
         </Box>
 
         <Card sx={{ p: 2, mb: 3, borderRadius: 2 }}>
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
             <TextField
               variant="outlined"
               label="Search by name"
@@ -292,13 +302,17 @@ const InventoryManagement = () => {
               value={filters.sku}
               onChange={handleFilterChange}
               sx={{ flex: 1 }}
+              InputProps={{
+                startAdornment: (
+                  <Search sx={{ color: "action.active", mr: 1 }} />
+                ),
+              }}
             />
             <Select
-              label="Category"
+              displayEmpty
               name="categoryId"
               value={filters.categoryId}
               onChange={handleFilterChange}
-              displayEmpty
               sx={{ flex: 1 }}
             >
               <MenuItem value="">All Categories</MenuItem>
@@ -328,72 +342,95 @@ const InventoryManagement = () => {
               <Table>
                 <TableHead sx={{ bgcolor: "background.default" }}>
                   <TableRow>
+                    <TableCell sx={{ fontWeight: 600 }}>Id</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>SKU</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Category</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }} align="right">Price</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }} align="right">Cost</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Stock</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>
+                      Stock Quantity
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>
+                      Reorder Level
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Price</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Cost</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {filteredProducts?.length > 0 ? (
                     filteredProducts.map((product) => {
-                      const category = categories.data?.find(c => c._id === product.categoryId);
                       return (
                         <TableRow
                           key={product._id}
                           hover
-                          sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                          sx={{
+                            "&:last-child td, &:last-child th": { border: 0 },
+                          }}
                         >
                           <TableCell>
                             <Box sx={{ display: "flex", alignItems: "center" }}>
                               <Avatar sx={{ bgcolor: "primary.main", mr: 2 }}>
                                 <Inventory />
                               </Avatar>
-                              <Typography fontWeight="medium">{product.name}</Typography>
+                              <Typography fontWeight="medium">
+                                {product._id}
+                              </Typography>
                             </Box>
                           </TableCell>
                           <TableCell>
-                            {product.sku}
+                            <Typography fontWeight="medium">
+                              {product.name}
+                            </Typography>
                           </TableCell>
+                          <TableCell>{product.sku}</TableCell>
                           <TableCell>
-                            <Chip 
-                              label={category?.name || 'Uncategorized'} 
-                              size="small" 
+                            <Chip
+                              label={product.categoryId.name || "Uncategorized"}
+                              size="small"
                               variant="outlined"
                             />
                           </TableCell>
-                          <TableCell align="right">
-                            ${product.price?.toFixed(2)}
-                          </TableCell>
-                          <TableCell align="right">
-                            ${product.cost?.toFixed(2)}
-                          </TableCell>
                           <TableCell>
-                            <StockIndicator 
-                              quantity={product.quantity} 
-                              reorderLevel={product.reorderLevel} 
+                            <StockIndicator
+                              quantity={product.quantity}
+                              reorderLevel={product.reorderLevel}
                             />
                           </TableCell>
                           <TableCell>
-                            <Tooltip title="Edit">
-                              <IconButton
-                                onClick={() => handleOpenDialog(product)}
-                                color="primary"
-                              >
-                                <Edit />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Delete">
-                              <IconButton
-                                onClick={() => handleDeleteProduct(product._id)}
-                                color="error"
-                              >
-                                <Delete />
-                              </IconButton>
-                            </Tooltip>
+                            <StockIndicator
+                              quantity={product.reorderLevel}
+                              reorderLevel={product.reorderLevel}
+                            />
+                          </TableCell>
+                          <TableCell>{formatMoney(product.price)}</TableCell>
+                          <TableCell>{formatMoney(product.cost)}</TableCell>
+                          <TableCell>
+                            <Box
+                              display="flex"
+                              alignItems="center"
+                              justifyContent="center"
+                              gap={1}
+                            >
+                              <Tooltip title="Edit">
+                                <IconButton
+                                  onClick={() => handleOpenDialog(product)}
+                                  color="primary"
+                                >
+                                  <Edit />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Delete">
+                                <IconButton
+                                  onClick={() =>
+                                    handleDeleteProduct(product._id)
+                                  }
+                                  color="error"
+                                >
+                                  <Delete />
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
                           </TableCell>
                         </TableRow>
                       );
@@ -457,13 +494,16 @@ const InventoryManagement = () => {
               onChange={handleDialogInputChange}
               sx={{ mb: 2 }}
             >
+              <MenuItem value="" disabled>
+                Select a category
+              </MenuItem>
               {categories?.data?.map((category) => (
                 <MenuItem key={category._id} value={category._id}>
                   {category.name}
                 </MenuItem>
               ))}
             </Select>
-            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+            <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
               <TextField
                 label="Price"
                 fullWidth
@@ -472,7 +512,9 @@ const InventoryManagement = () => {
                 value={currentProduct?.price || 0}
                 onChange={handleDialogInputChange}
                 InputProps={{
-                  startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                  startAdornment: (
+                    <InputAdornment position="start">$</InputAdornment>
+                  ),
                 }}
               />
               <TextField
@@ -483,11 +525,13 @@ const InventoryManagement = () => {
                 value={currentProduct?.cost || 0}
                 onChange={handleDialogInputChange}
                 InputProps={{
-                  startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                  startAdornment: (
+                    <InputAdornment position="start">$</InputAdornment>
+                  ),
                 }}
               />
             </Box>
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: "flex", gap: 2 }}>
               <TextField
                 label="Quantity"
                 fullWidth
@@ -549,4 +593,4 @@ const InventoryManagement = () => {
   );
 };
 
-export default InventoryManagement;
+export default ProductManagement;

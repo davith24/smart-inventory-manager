@@ -19,7 +19,7 @@ import {
   ListItemText,
   Container,
   alpha,
-  Badge
+  Badge,
 } from "@mui/material";
 import {
   Menu as MenuIcon,
@@ -31,7 +31,7 @@ import {
   ExitToApp,
   Person,
   PersonAdd,
-  KeyboardArrowDown
+  KeyboardArrowDown,
 } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
 import { useDispatch, useSelector } from "react-redux";
@@ -42,22 +42,22 @@ import {
   signOutSuccess,
 } from "../app/user/userSlice";
 import { toast } from "react-toastify";
-import VDMenu from "../assets/Logo_VD_Menu.png"
+import VDMenu from "../assets/Logo_VD_Menu.png";
 // Styled components
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
-  boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
-  position: 'sticky',
+  boxShadow: "0 2px 10px rgba(0, 0, 0, 0.05)",
+  position: "sticky",
   top: 0,
   zIndex: theme.zIndex.drawer + 1,
 }));
 
 const LogoWrapper = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  '&:hover': {
+  display: "flex",
+  alignItems: "center",
+  "&:hover": {
     opacity: 0.9,
-  }
+  },
 }));
 
 const Logo = styled("img")({
@@ -71,30 +71,30 @@ const NavButton = styled(Button)(({ theme }) => ({
   fontWeight: 500,
   borderRadius: 8,
   padding: theme.spacing(0.8, 2),
-  position: 'relative',
-  overflow: 'hidden',
-  transition: 'all 0.3s ease',
-  '&:after': {
+  position: "relative",
+  overflow: "hidden",
+  transition: "all 0.3s ease",
+  "&:after": {
     content: '""',
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
-    width: '0%',
+    width: "0%",
     height: 2,
     backgroundColor: theme.palette.primary.main,
-    transition: 'width 0.3s ease',
+    transition: "width 0.3s ease",
   },
-  '&:hover': {
+  "&:hover": {
     backgroundColor: alpha(theme.palette.primary.main, 0.05),
-    '&:after': {
-      width: '100%',
+    "&:after": {
+      width: "100%",
     },
   },
-  '&.active': {
+  "&.active": {
     color: theme.palette.primary.main,
     backgroundColor: alpha(theme.palette.primary.main, 0.1),
-    '&:after': {
-      width: '100%',
+    "&:after": {
+      width: "100%",
     },
   },
 }));
@@ -104,47 +104,49 @@ const SignButton = styled(Button)(({ theme, variant }) => ({
   borderRadius: 20,
   padding: theme.spacing(0.8, 2.5),
   fontWeight: 600,
-  boxShadow: variant === 'contained' ? '0 4px 12px rgba(0, 0, 0, 0.15)' : 'none',
-  transition: 'transform 0.2s, box-shadow 0.2s',
-  '&:hover': {
-    transform: 'translateY(-2px)',
-    boxShadow: variant === 'contained' ? '0 6px 15px rgba(0, 0, 0, 0.2)' : 'none',
+  boxShadow:
+    variant === "contained" ? "0 4px 12px rgba(0, 0, 0, 0.15)" : "none",
+  transition: "transform 0.2s, box-shadow 0.2s",
+  "&:hover": {
+    transform: "translateY(-2px)",
+    boxShadow:
+      variant === "contained" ? "0 6px 15px rgba(0, 0, 0, 0.2)" : "none",
   },
 }));
 
 const StyledBadge = styled(Badge)(({ theme }) => ({
-  '& .MuiBadge-badge': {
-    backgroundColor: '#44b700',
-    color: '#44b700',
+  "& .MuiBadge-badge": {
+    backgroundColor: "#44b700",
+    color: "#44b700",
     boxShadow: `0 0 0 2px ${theme.palette.background.paper}`,
-    '&::after': {
-      position: 'absolute',
+    "&::after": {
+      position: "absolute",
       top: 0,
       left: 0,
-      width: '100%',
-      height: '100%',
-      borderRadius: '50%',
-      animation: 'ripple 1.2s infinite ease-in-out',
-      border: '1px solid currentColor',
+      width: "100%",
+      height: "100%",
+      borderRadius: "50%",
+      animation: "ripple 1.2s infinite ease-in-out",
+      border: "1px solid currentColor",
       content: '""',
     },
   },
-  '@keyframes ripple': {
-    '0%': {
-      transform: 'scale(.8)',
+  "@keyframes ripple": {
+    "0%": {
+      transform: "scale(.8)",
       opacity: 1,
     },
-    '100%': {
-      transform: 'scale(2.4)',
+    "100%": {
+      transform: "scale(2.4)",
       opacity: 0,
     },
   },
 }));
 
 const DrawerHeader = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
   padding: theme.spacing(2, 2),
   backgroundColor: theme.palette.primary.main,
   color: theme.palette.primary.contrastText,
@@ -157,9 +159,9 @@ const StyledNavLink = ({ to, children, onClick }) => {
       to={to}
       onClick={onClick}
       style={({ isActive }) => ({
-        textDecoration: 'none',
+        textDecoration: "none",
       })}
-      className={({ isActive }) => isActive ? 'active' : ''}
+      className={({ isActive }) => (isActive ? "active" : "")}
     >
       {children}
     </NavLink>
@@ -202,9 +204,9 @@ const Navbar = () => {
   };
 
   const menuItems = [
-    { text: 'Home', icon: <Home />, link: '/' },
-    { text: 'About', icon: <Info />, link: '/about' },
-    { text: 'Contact', icon: <ContactSupport />, link: '/contact' },
+    { text: "Home", icon: <Home />, link: "/" },
+    { text: "About", icon: <Info />, link: "/about" },
+    { text: "Contact", icon: <ContactSupport />, link: "/contact" },
   ];
 
   return (
@@ -223,56 +225,60 @@ const Navbar = () => {
                 sx={{
                   ml: 1.5,
                   fontWeight: 700,
-                  color: 'primary.main',
-                  display: { xs: 'none', sm: 'block' }
+                  color: "primary.main",
+                  display: { xs: "none", sm: "block" },
                 }}
               >
-                VD Menu
+                Smart Inventory Management
               </Typography>
             </LogoWrapper>
           </StyledNavLink>
 
           {/* Desktop Navigation Menu */}
-          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, justifyContent: 'center' }}>
+          <Box
+            sx={{
+              flexGrow: 1,
+              display: { xs: "none", md: "flex" },
+              justifyContent: "center",
+            }}
+          >
             {menuItems.map((item) => (
               <StyledNavLink key={item.text} to={item.link}>
-                <NavButton>
-                  {item.text}
-                </NavButton>
+                <NavButton>{item.text}</NavButton>
               </StyledNavLink>
             ))}
           </Box>
 
           {/* Authentication Section */}
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
             {!isMobile && user ? (
               <>
-                <Box 
-                  sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center',
-                    cursor: 'pointer',
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    cursor: "pointer",
                     borderRadius: 20,
                     px: 1.5,
                     py: 0.5,
-                    '&:hover': { 
-                      bgcolor: 'rgba(0, 0, 0, 0.04)' 
-                    }
+                    "&:hover": {
+                      bgcolor: "rgba(0, 0, 0, 0.04)",
+                    },
                   }}
                   onClick={handleUserMenuOpen}
                 >
                   <StyledBadge
                     overlap="circular"
-                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                    anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
                     variant="dot"
                   >
-                    <Avatar 
+                    <Avatar
                       alt={user?.name}
-                      src={user?.profileImage || ''}
-                      sx={{ 
-                        width: 36, 
+                      src={user?.profileImage || ""}
+                      sx={{
+                        width: 36,
                         height: 36,
-                        bgcolor: 'primary.main' 
+                        bgcolor: "primary.main",
                       }}
                     >
                       {user?.name?.charAt(0)}
@@ -283,7 +289,9 @@ const Navbar = () => {
                       {user?.name}
                     </Typography>
                     <Typography variant="caption" color="text.secondary" noWrap>
-                      {user?.roleId?.slug === "admin" ? "Administrator" : "Client"}
+                      {user?.roleId?.slug === "admin"
+                        ? "Administrator"
+                        : "Client"}
                     </Typography>
                   </Box>
                   <KeyboardArrowDown fontSize="small" color="action" />
@@ -299,24 +307,24 @@ const Navbar = () => {
                     sx: {
                       mt: 1.5,
                       width: 220,
-                      overflow: 'visible',
+                      overflow: "visible",
                       borderRadius: 2,
-                      '&:before': {
+                      "&:before": {
                         content: '""',
-                        display: 'block',
-                        position: 'absolute',
+                        display: "block",
+                        position: "absolute",
                         top: 0,
                         right: 14,
                         width: 10,
                         height: 10,
-                        bgcolor: 'background.paper',
-                        transform: 'translateY(-50%) rotate(45deg)',
+                        bgcolor: "background.paper",
+                        transform: "translateY(-50%) rotate(45deg)",
                         zIndex: 0,
                       },
                     },
                   }}
-                  transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                  anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                  transformOrigin={{ horizontal: "right", vertical: "top" }}
+                  anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
                 >
                   <Box sx={{ px: 2, py: 1.5 }}>
                     <Typography variant="subtitle1" fontWeight={600}>
@@ -334,7 +342,11 @@ const Navbar = () => {
                     <ListItemText>Profile</ListItemText>
                   </MenuItem>
                   <StyledNavLink
-                    to={user?.roleId?.slug === "admin" ? "/admin/dashboard" : "/client/dashboard"}
+                    to={
+                      user?.roleId?.slug === "admin"
+                        ? "/admin/dashboard"
+                        : "/client/dashboard"
+                    }
                     onClick={handleUserMenuClose}
                   >
                     <MenuItem dense>
@@ -349,12 +361,15 @@ const Navbar = () => {
                     <ListItemIcon>
                       <ExitToApp fontSize="small" color="error" />
                     </ListItemIcon>
-                    <ListItemText primary="Sign Out" primaryTypographyProps={{ color: 'error' }} />
+                    <ListItemText
+                      primary="Sign Out"
+                      primaryTypographyProps={{ color: "error" }}
+                    />
                   </MenuItem>
                 </Menu>
               </>
             ) : !isMobile && !user ? (
-              <Box sx={{ display: 'flex' }}>
+              <Box sx={{ display: "flex" }}>
                 <StyledNavLink to="/signin">
                   <SignButton variant="outlined" color="primary">
                     Sign In
@@ -388,30 +403,34 @@ const Navbar = () => {
             open={drawerOpen}
             onClose={handleDrawerToggle}
             PaperProps={{
-              sx: { width: 280, borderTopLeftRadius: 16, borderBottomLeftRadius: 16 }
+              sx: {
+                width: 280,
+                borderTopLeftRadius: 16,
+                borderBottomLeftRadius: 16,
+              },
             }}
           >
             <DrawerHeader>
               <Typography variant="h6" fontWeight={600}>
                 Menu
               </Typography>
-              <IconButton 
+              <IconButton
                 onClick={handleDrawerToggle}
-                sx={{ color: 'inherit' }}
+                sx={{ color: "inherit" }}
               >
                 <Close />
               </IconButton>
             </DrawerHeader>
-            
+
             {user && (
-              <Box sx={{ p: 2, display: 'flex', alignItems: 'center' }}>
-                <Avatar 
-                  alt={user?.name} 
-                  src={user?.profileImage || ''}
-                  sx={{ 
-                    width: 50, 
+              <Box sx={{ p: 2, display: "flex", alignItems: "center" }}>
+                <Avatar
+                  alt={user?.name}
+                  src={user?.profileImage || ""}
+                  sx={{
+                    width: 50,
                     height: 50,
-                    bgcolor: 'primary.main' 
+                    bgcolor: "primary.main",
                   }}
                 >
                   {user?.name?.charAt(0)}
@@ -426,20 +445,18 @@ const Navbar = () => {
                 </Box>
               </Box>
             )}
-            
+
             <Divider />
-            
+
             <List>
               {menuItems.map((item) => (
-                <StyledNavLink 
-                  key={item.text} 
+                <StyledNavLink
+                  key={item.text}
                   to={item.link}
                   onClick={handleDrawerToggle}
                 >
                   <ListItem button>
-                    <ListItemIcon>
-                      {item.icon}
-                    </ListItemIcon>
+                    <ListItemIcon>{item.icon}</ListItemIcon>
                     <ListItemText primary={item.text} />
                   </ListItem>
                 </StyledNavLink>
@@ -452,23 +469,27 @@ const Navbar = () => {
               {user ? (
                 <>
                   <StyledNavLink
-                    to={user?.roleId?.slug === "admin" ? "/admin/dashboard" : "/client/dashboard"}
+                    to={
+                      user?.roleId?.slug === "admin"
+                        ? "/admin/dashboard"
+                        : "/client/dashboard"
+                    }
                     onClick={handleDrawerToggle}
                   >
-                    <Button 
-                      fullWidth 
-                      variant="outlined" 
-                      color="primary" 
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      color="primary"
                       startIcon={<Dashboard />}
                       sx={{ mb: 1, borderRadius: 2 }}
                     >
                       Dashboard
                     </Button>
                   </StyledNavLink>
-                  <Button 
-                    fullWidth 
-                    variant="contained" 
-                    color="error" 
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    color="error"
                     onClick={handleSignOut}
                     startIcon={<ExitToApp />}
                     sx={{ borderRadius: 2 }}
@@ -479,9 +500,9 @@ const Navbar = () => {
               ) : (
                 <>
                   <StyledNavLink to="/signin" onClick={handleDrawerToggle}>
-                    <Button 
-                      fullWidth 
-                      variant="outlined" 
+                    <Button
+                      fullWidth
+                      variant="outlined"
                       color="primary"
                       startIcon={<Person />}
                       sx={{ mb: 1, borderRadius: 2 }}
@@ -490,11 +511,11 @@ const Navbar = () => {
                     </Button>
                   </StyledNavLink>
                   <StyledNavLink to="/signup" onClick={handleDrawerToggle}>
-                    <Button 
-                      fullWidth 
-                      variant="contained" 
+                    <Button
+                      fullWidth
+                      variant="contained"
                       color="primary"
-                      startIcon={<PersonAdd />} 
+                      startIcon={<PersonAdd />}
                       sx={{ borderRadius: 2 }}
                     >
                       Sign Up

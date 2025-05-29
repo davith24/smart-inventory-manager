@@ -10,13 +10,18 @@ import {
   FormControlLabel,
   Divider,
 } from "@mui/material";
-import MainLayout from "../../layouts/MainLayout";
+import MainLayout from "../layouts/MainLayout";
+import { useSelector } from "react-redux";
 
-const AdminSettings = () => {
+const Settings = () => {
+  const { currentUser } = useSelector((state) => state.user);
+  const user = currentUser?.user;
+  console.log("Current User:", user);
+
   const [formData, setFormData] = useState({
-    name: "Admin User",
-    email: "admin@example.com",
-    role: "Administrator",
+    name: user?.name,
+    email: user?.email,
+    // roleId: user?.roleId?._id,
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
@@ -39,9 +44,9 @@ const AdminSettings = () => {
 
   return (
     <MainLayout>
-      <Box p={4}>
-        <Typography variant="h4" gutterBottom>
-          Admin Settings
+      <Box sx={{ p: 3 }}>
+        <Typography variant="h4" sx={{ fontWeight: 600 }}>
+          Settings
         </Typography>
 
         <Paper sx={{ padding: 4 }}>
@@ -68,15 +73,15 @@ const AdminSettings = () => {
                 onChange={handleChange}
               />
             </Grid>
-            <Grid item xs={12} md={4}>
+            {/* <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
                 label="Role"
-                name="role"
-                value={formData.role}
+                name="roleId"
+                value={formData.roleId?._id}
                 disabled
               />
-            </Grid>
+            </Grid> */}
           </Grid>
 
           <Divider sx={{ my: 3 }} />
@@ -162,4 +167,4 @@ const AdminSettings = () => {
   );
 };
 
-export default AdminSettings;
+export default Settings;

@@ -10,7 +10,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
   TextField,
   Dialog,
   DialogActions,
@@ -24,6 +23,9 @@ import {
   Avatar,
   Chip,
   MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
 } from "@mui/material";
 import {
   Edit,
@@ -34,9 +36,8 @@ import {
   CheckCircle,
   Cancel,
 } from "@mui/icons-material";
-import { styled } from "@mui/system";
-import MainLayout from "../../layouts/MainLayout";
-import api from "../../api/axiosConfig";
+import MainLayout from "../layouts/MainLayout";
+import api from "../api/axiosConfig";
 
 const FORM_STATUS_OPTIONS = ["active", "inactive"];
 
@@ -58,6 +59,7 @@ const CategoryManagement = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [currentCategory, setCurrentCategory] = useState(null);
   const [filter, setFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [notification, setNotification] = useState({
     open: false,
     message: "",
@@ -86,17 +88,21 @@ const CategoryManagement = () => {
     fetchCategories();
   }, [fetchCategories]);
 
-  const filteredCategories = categories?.data?.filter(
-    (category) =>
+  const filteredCategories = categories?.data?.filter((category) => {
+    const matchesSearch =
+      category._id?.toLowerCase().includes(filter.toLowerCase()) ||
       category.name?.toLowerCase().includes(filter.toLowerCase()) ||
-      category.status?.toLowerCase().includes(filter.toLowerCase())
-  );
+      category.status?.toLowerCase().includes(filter.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === "all" || category.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
 
   const handleOpenDialog = (category) => {
     setCurrentCategory(
-      category
-        ? { ...category }
-        : { name: "", status: "active" }
+      category ? { ...category } : { name: "", status: "active" }
     );
     setOpenDialog(true);
   };
@@ -121,7 +127,10 @@ const CategoryManagement = () => {
 
     try {
       if (isEditing) {
-        await api.patch(`api/v1/categories/${currentCategory._id}`, currentCategory);
+        await api.patch(
+          `api/v1/categories/${currentCategory._id}`,
+          currentCategory
+        );
       } else {
         const { _id, ...newCategory } = currentCategory;
         await api.post("api/v1/categories", newCategory);
@@ -194,7 +203,7 @@ const CategoryManagement = () => {
           }}
         >
           <Typography variant="h4" sx={{ fontWeight: 600 }}>
-            Categories
+            Categories Management
           </Typography>
           <Button
             variant="contained"
@@ -210,18 +219,39 @@ const CategoryManagement = () => {
         </Box>
 
         <Card sx={{ p: 2, mb: 3, borderRadius: 2 }}>
-          <TextField
-            variant="outlined"
-            label="Search categories..."
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            fullWidth
-            InputProps={{
-              startAdornment: (
-                <Search sx={{ color: "action.active", mr: 1 }} />
-              ),
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              gap: 2,
             }}
-          />
+          >
+            <TextField
+              variant="outlined"
+              label="Search categories..."
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              fullWidth
+              InputProps={{
+                startAdornment: (
+                  <Search sx={{ color: "action.active", mr: 1 }} />
+                ),
+              }}
+            />
+
+            <FormControl fullWidth>
+              <InputLabel>Status</InputLabel>
+              <Select
+                label="Status"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <MenuItem value="all">All</MenuItem>
+                <MenuItem value="active">Active</MenuItem>
+                <MenuItem value="inactive">Inactive</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
         </Card>
 
         {loading ? (
@@ -241,9 +271,9 @@ const CategoryManagement = () => {
               <Table>
                 <TableHead sx={{ bgcolor: "background.default" }}>
                   <TableRow>
+                    <TableCell sx={{ fontWeight: 600 }}>Id</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Category</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>slug</TableCell>
-                    {/* <TableCell sx={{ fontWeight: 600 }}>Category</TableCell> */}
+                    <TableCell sx={{ fontWeight: 600 }}>Slug</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
                   </TableRow>
@@ -254,17 +284,24 @@ const CategoryManagement = () => {
                       <TableRow
                         key={category._id}
                         hover
-                        sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                        sx={{
+                          "&:last-child td, &:last-child th": { border: 0 },
+                        }}
                       >
                         <TableCell>
                           <Box sx={{ display: "flex", alignItems: "center" }}>
                             <Avatar sx={{ bgcolor: "primary.main", mr: 2 }}>
                               <Category />
                             </Avatar>
+                            <Typography>{category._id}</Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: "flex", alignItems: "center" }}>
                             <Typography>{category.name}</Typography>
                           </Box>
                         </TableCell>
-                         <TableCell>
+                        <TableCell>
                           <Box sx={{ display: "flex", alignItems: "center" }}>
                             <Typography>{category.slug}</Typography>
                           </Box>
@@ -294,7 +331,7 @@ const CategoryManagement = () => {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={3} align="center" sx={{ py: 4 }}>
+                      <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
                         <Typography color="text.secondary">
                           No categories found
                         </Typography>

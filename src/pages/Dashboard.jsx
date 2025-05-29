@@ -16,12 +16,12 @@ import {
   ListItemAvatar,
   IconButton,
   Tooltip,
-  Button
+  Button,
 } from "@mui/material";
 import { useSelector } from "react-redux";
 import { NavLink } from "react-router-dom";
-import MainLayout from "../../layouts/MainLayout";
-import api from "../../api/axiosConfig";
+import MainLayout from "../layouts/MainLayout";
+import api from "../api/axiosConfig";
 
 // Icons
 import InventoryIcon from "@mui/icons-material/Inventory";
@@ -34,11 +34,13 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import CategoryIcon from "@mui/icons-material/Category";
 import PeopleIcon from "@mui/icons-material/People";
+import { format } from "date-fns";
+import { formatTime } from "../components/Format";
 
 // Quick Action Button Component
 const QuickActionButton = ({ title, icon, to, color }) => {
   const theme = useTheme();
-  
+
   return (
     <NavLink to={to} style={{ textDecoration: "none" }}>
       <Button
@@ -58,8 +60,8 @@ const QuickActionButton = ({ title, icon, to, color }) => {
           transition: "all 0.3s",
           "&:hover": {
             transform: "translateY(-3px)",
-            boxShadow: theme.shadows[4]
-          }
+            boxShadow: theme.shadows[4],
+          },
         }}
       >
         {title}
@@ -71,18 +73,18 @@ const QuickActionButton = ({ title, icon, to, color }) => {
 // Stat Card Component
 const StatCard = ({ title, value, icon, color, trend }) => {
   const theme = useTheme();
-  
+
   return (
-    <Card 
-      sx={{ 
+    <Card
+      sx={{
         height: "100%",
         boxShadow: theme.shadows[3],
         borderRadius: "12px",
         transition: "all 0.3s",
         "&:hover": {
           transform: "translateY(-5px)",
-          boxShadow: theme.shadows[6]
-        }
+          boxShadow: theme.shadows[6],
+        },
       }}
     >
       <CardContent>
@@ -107,7 +109,7 @@ const StatCard = ({ title, value, icon, color, trend }) => {
             sx={{
               bgcolor: color || theme.palette.primary.main,
               width: 56,
-              height: 56
+              height: 56,
             }}
           >
             {icon}
@@ -122,7 +124,7 @@ const Dashboard = () => {
   const theme = useTheme();
   const { currentUser } = useSelector((state) => state.user);
   const user = currentUser?.user;
-  
+
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState({
     totalCategories: 0,
@@ -132,39 +134,54 @@ const Dashboard = () => {
     salesToday: 0,
     lowStockItems: 0,
     recentSales: [],
-    lowStockProducts: []
+    lowStockProducts: [],
   });
 
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
     try {
       // Fetch all dashboard data concurrently
-      const [categoriesResponse, productsResponse, salesResponse, customersResponse] = await Promise.all([
-        api.get("api/v1/categories").catch(err => ({ data: { data: { total: 0 } } })),
-        api.get("api/v1/products").catch(err => ({ data: { data: { total: 0 } } })),
-        api.get("api/v1/sales").catch(err => ({ data: { data: { total: 0 } } })),
-        api.get("api/v1/customers").catch(err => ({ data: { data: { total: 0 } } }))
+      const [
+        categoriesResponse,
+        productsResponse,
+        salesResponse,
+        customersResponse,
+      ] = await Promise.all([
+        api
+          .get("api/v1/categories")
+          .catch((err) => ({ data: { data: { total: 0 } } })),
+        api
+          .get("api/v1/products")
+          .catch((err) => ({ data: { data: { total: 0 } } })),
+        api
+          .get("api/v1/sales")
+          .catch((err) => ({ data: { data: { total: 0 } } })),
+        api
+          .get("api/v1/customers")
+          .catch((err) => ({ data: { data: { total: 0 } } })),
       ]);
-      
+
       // Extract totals from responses
       const totalCategories = categoriesResponse.data?.data?.total;
-      const totalProducts = productsResponse.data?.data?.total ;
-      const totalSales = salesResponse.data?.data?.total ;
-      const totalCustomers = customersResponse.data?.data?.total ;
-      
+      const totalProducts = productsResponse.data?.data?.total;
+      const totalSales = salesResponse.data?.data?.total;
+      const sales = salesResponse.data?.data;
+      const totalCustomers = customersResponse.data?.data?.total;
+
       console.log("Dashboard data:", {
         totalCategories,
         totalProducts,
         totalSales,
-        totalCustomers
+        totalCustomers,
       });
-      
-      setDashboardData(prev => ({
+
+      setDashboardData((prev) => ({
         ...prev,
         totalCategories,
         totalProducts,
         totalSales,
-        totalCustomers
+        sales,
+        totalCustomers,
       }));
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error);
@@ -180,13 +197,13 @@ const Dashboard = () => {
 
   const renderRecentSales = () => (
     <List sx={{ width: "100%" }}>
-      {dashboardData.recentSales.length > 0 ? (
-        dashboardData.recentSales.map((sale, index) => (
+      {dashboardData?.sales?.total > 0 ? (
+        dashboardData?.sales?.data?.map((sale, index) => (
           <React.Fragment key={index}>
             <ListItem
               secondaryAction={
                 <Typography variant="body2" color="textSecondary">
-                  {sale.time}
+                  {formatTime(sale.createdAt)}
                 </Typography>
               }
             >
@@ -196,10 +213,13 @@ const Dashboard = () => {
                 </Avatar>
               </ListItemAvatar>
               <ListItemText
-                primary={`${sale.id} - ${sale.product}`}
-                secondary={sale.amount}
+                primary={`${sale.products?.length} items`}
+                secondary={sale.totalAmount}
                 primaryTypographyProps={{ fontWeight: "medium" }}
-                secondaryTypographyProps={{ color: "success.main", fontWeight: "medium" }}
+                secondaryTypographyProps={{
+                  color: "success.main",
+                  fontWeight: "medium",
+                }}
               />
             </ListItem>
             {index < dashboardData.recentSales.length - 1 && (
@@ -237,9 +257,9 @@ const Dashboard = () => {
                 primaryTypographyProps={{ fontWeight: "medium" }}
                 secondaryTypographyProps={{ color: "warning.main" }}
               />
-              <Button 
-                variant="outlined" 
-                size="small" 
+              <Button
+                variant="outlined"
+                size="small"
                 color="warning"
                 startIcon={<LocalShippingIcon />}
               >
@@ -272,7 +292,7 @@ const Dashboard = () => {
             display: "flex",
             height: "100vh",
             alignItems: "center",
-            justifyContent: "center"
+            justifyContent: "center",
           }}
         >
           <CircularProgress size={60} thickness={4} />
@@ -291,7 +311,7 @@ const Dashboard = () => {
             color: "white",
             padding: { xs: 3, md: 4 },
             marginBottom: 4,
-            borderRadius: "16px"
+            borderRadius: "16px",
           }}
         >
           <Typography variant="h4" sx={{ fontWeight: "bold" }}>
@@ -305,39 +325,39 @@ const Dashboard = () => {
         {/* Key Metrics */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} lg={3}>
-            <StatCard 
-              title="Total Categories" 
-              value={dashboardData.totalCategories} 
+            <StatCard
+              title="Total Categories"
+              value={dashboardData.totalCategories}
               icon={<CategoryIcon fontSize="large" />}
               color={theme.palette.info.main}
-              trend="+2 this month"
+              // trend="+2 this month"
             />
           </Grid>
           <Grid item xs={12} sm={6} lg={3}>
-            <StatCard 
-              title="Total Products" 
-              value={dashboardData.totalProducts} 
+            <StatCard
+              title="Total Products"
+              value={dashboardData.totalProducts}
               icon={<InventoryIcon fontSize="large" />}
               color={theme.palette.primary.main}
-              trend="+12% this month"
+              // trend="+12% this month"
             />
           </Grid>
           <Grid item xs={12} sm={6} lg={3}>
-            <StatCard 
-              title="Total Sales" 
-              value={dashboardData.totalSales} 
+            <StatCard
+              title="Total Sales"
+              value={dashboardData.totalSales}
               icon={<PointOfSaleIcon fontSize="large" />}
               color={theme.palette.success.main}
-              trend="+8% this week"
+              // trend="+8% this week"
             />
           </Grid>
           <Grid item xs={12} sm={6} lg={3}>
-            <StatCard 
-              title="Total Customers" 
-              value={dashboardData.totalCustomers} 
+            <StatCard
+              title="Total Customers"
+              value={dashboardData.totalCustomers}
               icon={<PeopleIcon fontSize="large" />}
               color={theme.palette.secondary.main}
-              trend="+15 this month"
+              // trend="+15 this month"
             />
           </Grid>
         </Grid>
@@ -346,7 +366,12 @@ const Dashboard = () => {
           <Grid item xs={12} md={8}>
             <Card sx={{ borderRadius: "12px", height: "100%" }}>
               <CardContent>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  mb={2}
+                >
                   <Typography variant="h6" fontWeight="medium">
                     Recent Sales
                   </Typography>
@@ -366,36 +391,41 @@ const Dashboard = () => {
                 </Typography>
                 <Grid container spacing={2} sx={{ mt: 1 }}>
                   <Grid item xs={12}>
-                    <QuickActionButton 
-                      title="Add New Product" 
-                      icon={<AddIcon />} 
-                      to="/products/add" 
+                    <QuickActionButton
+                      title="Add New Product"
+                      icon={<AddIcon />}
+                      to="/products/add"
                       color="primary"
                     />
                   </Grid>
                   <Grid item xs={12}>
-                    <QuickActionButton 
-                      title="Record a Sale" 
-                      icon={<PointOfSaleIcon />} 
-                      to="/sales/new" 
+                    <QuickActionButton
+                      title="Record a Sale"
+                      icon={<PointOfSaleIcon />}
+                      to="/sales/new"
                       color="success"
                     />
                   </Grid>
                   <Grid item xs={12}>
-                    <QuickActionButton 
-                      title="View Reports" 
-                      icon={<AssessmentIcon />} 
-                      to="/reports" 
+                    <QuickActionButton
+                      title="View Reports"
+                      icon={<AssessmentIcon />}
+                      to="/reports"
                       color="info"
                     />
                   </Grid>
                 </Grid>
               </CardContent>
             </Card>
-            
+
             <Card sx={{ borderRadius: "12px" }}>
               <CardContent>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  mb={2}
+                >
                   <Typography variant="h6" fontWeight="medium">
                     Low Stock Items
                   </Typography>

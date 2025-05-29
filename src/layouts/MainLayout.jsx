@@ -1,151 +1,64 @@
 import * as React from "react";
-import { extendTheme } from "@mui/material/styles";
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import BarChartIcon from "@mui/icons-material/BarChart";
-import DescriptionIcon from "@mui/icons-material/Description";
-import PointOfSaleIcon from '@mui/icons-material/PointOfSale';
+import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
+import { extendTheme } from "@mui/material/styles";
 import { AppProvider } from "@toolpad/core/AppProvider";
 import { DashboardLayout } from "@toolpad/core/DashboardLayout";
 import { PageContainer } from "@toolpad/core/PageContainer";
 import { useSelector } from "react-redux";
 import {
-  AdminPanelSettings,
   CategoryOutlined,
   List,
-  PeopleOutline,
   Settings,
-  Shop,
-  Store,
   Telegram,
 } from "@mui/icons-material";
 
 // Navigation Config
 const NAVIGATION = [
   { kind: "header", title: "Main" },
-  // {
-  //   segment: "admin/dashboard",
-  //   title: "Dashboard",
-  //   icon: <DashboardIcon />,
-  //   // roles: ["admin"],
-  // },
   {
-    segment: "client/dashboard",
+    segment: "dashboard",
     title: "Dashboard",
     icon: <DashboardIcon />,
-    // roles: ["user"],
   },
   { kind: "divider" },
-  { kind: "header", title: "User Managments", roles: ["admin"] },
+  { kind: "header", title: "Inventory" },
   {
-    segment: "admin/role-management",
-    title: "Role Management",
-    icon: <AdminPanelSettings />,
-    roles: ["admin"],
-  },
-  {
-    segment: "admin/user-management",
-    title: "User Management",
-    icon: <PeopleOutline />,
-    roles: ["admin"],
-  },
-  { kind: "header", title: "Business", roles: ["user"] },
-  {
-    segment: "client/business-management",
-    title: "Business Management",
-    icon: <Store />,
-    roles: ["user"],
-  },
-
-  {
-    segment: "client/category-management",
-    title: "Category Management",
+    segment: "categories-management",
+    title: "Categories Management",
     icon: <CategoryOutlined />,
-    // roles: ["user"],
   },
   {
-    segment: "client/item-management",
-    title: "Inventory Management",
+    segment: "products-management",
+    title: "Products Management",
     icon: <List />,
-    // roles: ["user"],
   },
-
-   {
-    segment: "Sales",
-    title: "SalesManagement",
-    icon: <PointOfSaleIcon />,
-    // roles: ["user"],
-  },
-
   { kind: "divider" },
-  { kind: "header", title: "Subscription", roles: ["admin"] },
+  { kind: "header", title: "Customers" },
   {
-    segment: "admin/subscription-plan-management",
-    title: "Subscription Plan Management",
-    icon: <ShoppingCartIcon />,
-    roles: ["admin"],
+    segment: "sales-management",
+    title: "Sales Management",
+    icon: <PointOfSaleIcon />,
   },
   {
-    segment: "admin/user-subscription-plan-management",
-    title: "User-Subscription Plan Management",
-    icon: <BarChartIcon />,
-    roles: ["admin"],
-  },
-  { kind: "header", title: "Customers", },
-  {
-    segment: "client/telegram-management",
+    segment: "customers-management",
     title: "Customers Management",
     icon: <Telegram />,
-    // roles: ["user"],
   },
-  // { kind: "divider" },
-  // { kind: "header", title: "Businesses", roles: ["admin"] },
-  // {
-  //   segment: "admin/business-lists",
-  //   title: "Business Lists",
-  //   icon: <Store />,
-  //   roles: ["admin"],
-  // },
-  // { kind: "header", title: "Orders", roles: ["user"] },
-
-  // { kind: "divider" },
-  // { kind: "header", title: "Reports & An  alysis" },
-  // {
-  //   segment: "admin/reports",
-  //   title: "Reports",
-  //   icon: <DescriptionIcon />,
-  //   roles: ["admin"],
-  // },
-  // {
-  //   segment: "admin/analysis",
-  //   title: "Analysis",
-  //   icon: <BarChartIcon />,
-  //   roles: ["admin"],
-  // },
-
   { kind: "divider" },
   { kind: "header", title: "Settings" },
   {
-    segment: "admin/settings",
+    segment: "settings",
     title: "Settings",
     icon: <Settings />,
-    roles: ["admin"],
-  },
-  {
-    segment: "client/settings",
-    title: "Settings",
-    icon: <Settings />,
-    roles: ["user"],
   },
 ];
 
-// Theme Setup
 const demoTheme = extendTheme({
   colorSchemes: { light: {}, dark: {} },
   colorSchemeSelector: "class",
 });
 
-// Navigation Filter Function
 const filterNavigation = (nav, roles) =>
   nav
     .filter((item) => {
@@ -164,7 +77,6 @@ const filterNavigation = (nav, roles) =>
       return item;
     });
 
-// Extract header title by role
 const getHeaderTitleByRole = (nav, roles) => {
   const header = nav.find(
     (item) =>
@@ -173,14 +85,12 @@ const getHeaderTitleByRole = (nav, roles) => {
   return header?.title || "VD Menu";
 };
 
-// Header component
 const Header = ({ title }) => (
   <div className="p-4 bg-white shadow-md">
     <h1 className="text-xl font-semibold">{title}</h1>
   </div>
 );
 
-// Main layout component
 const MainLayout = ({ children }) => {
   const { currentUser } = useSelector((state) => state.user);
   const user = currentUser?.user;
@@ -199,7 +109,6 @@ const MainLayout = ({ children }) => {
     <AppProvider theme={demoTheme}>
       <DashboardLayout navigation={filteredNavigation}>
         <PageContainer>
-          {/* <Header title={headerTitle} /> */}
           <div className="p-4">{children}</div>
         </PageContainer>
       </DashboardLayout>
