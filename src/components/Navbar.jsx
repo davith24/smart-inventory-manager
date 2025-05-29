@@ -214,10 +214,10 @@ const Navbar = () => {
           {/* Logo and Brand */}
           <StyledNavLink to="/">
             <LogoWrapper>
-              <Logo
+              {/* <Logo
                 src={VDMenu}
                 alt="Logo"
-              />
+              /> */}
               <Typography
                 variant="h6"
                 sx={{

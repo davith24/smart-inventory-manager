@@ -4,6 +4,7 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import DescriptionIcon from "@mui/icons-material/Description";
+import PointOfSaleIcon from '@mui/icons-material/PointOfSale';
 import { AppProvider } from "@toolpad/core/AppProvider";
 import { DashboardLayout } from "@toolpad/core/DashboardLayout";
 import { PageContainer } from "@toolpad/core/PageContainer";
@@ -72,7 +73,7 @@ const NAVIGATION = [
    {
     segment: "Sales",
     title: "SalesManagement",
-    icon: <List />,
+    icon: <PointOfSaleIcon />,
     // roles: ["user"],
   },
 

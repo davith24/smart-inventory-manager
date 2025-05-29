@@ -242,6 +242,8 @@ const CategoryManagement = () => {
                 <TableHead sx={{ bgcolor: "background.default" }}>
                   <TableRow>
                     <TableCell sx={{ fontWeight: 600 }}>Category</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>slug</TableCell>
+                    {/* <TableCell sx={{ fontWeight: 600 }}>Category</TableCell> */}
                     <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
                   </TableRow>
@@ -260,6 +262,11 @@ const CategoryManagement = () => {
                               <Category />
                             </Avatar>
                             <Typography>{category.name}</Typography>
+                          </Box>
+                        </TableCell>
+                         <TableCell>
+                          <Box sx={{ display: "flex", alignItems: "center" }}>
+                            <Typography>{category.slug}</Typography>
                           </Box>
                         </TableCell>
                         <TableCell>

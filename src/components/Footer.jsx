@@ -27,7 +27,10 @@ import {
   LocationOn,
   Email,
   Phone,
-  Send
+  Send,
+  Home as HomeIcon,
+  Info as AboutIcon,
+  ContactMail as ContactIcon
 } from '@mui/icons-material';
 
 // Styled components
@@ -129,19 +132,15 @@ const Footer = () => {
   const companyLogo = "https://i.pinimg.com/736x/12/83/16/1283166bf58b7a77574a51cdeaa68142.jpg";
   
   const quickLinks = [
-    { name: 'Home', url: '/' },
-    { name: 'About Us', url: '/about' },
-    { name: 'Services', url: '/services' },
-    { name: 'Portfolio', url: '/portfolio' },
-    { name: 'Contact', url: '/contact' },
+    { name: 'Home', url: '/', icon: <HomeIcon fontSize="small" /> },
+    { name: 'About Us', url: '/about', icon: <AboutIcon fontSize="small" /> },
+    { name: 'Contact', url: '/contact', icon: <ContactIcon fontSize="small" /> },
   ];
   
   const policies = [
     { name: 'Privacy Policy', url: '/privacy' },
     { name: 'Terms of Service', url: '/terms' },
     { name: 'Cookie Policy', url: '/cookies' },
-    { name: 'Refund Policy', url: '/refunds' },
-    { name: 'FAQ', url: '/faq' },
   ];
   
   const socialLinks = [
@@ -244,8 +243,11 @@ const Footer = () => {
             
             <List disablePadding>
               {quickLinks.map((link) => (
-                <ListItem key={link.name} disablePadding disableGutters sx={{ mb: 0.5 }}>
-                  <FooterLink href={link.url}>
+                <ListItem key={link.name} disablePadding disableGutters sx={{ mb: 1 }}>
+                  <FooterLink href={link.url} sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Box sx={{ mr: 1, display: 'flex' }}>
+                      {link.icon}
+                    </Box>
                     {link.name}
                   </FooterLink>
                 </ListItem>
@@ -261,7 +263,7 @@ const Footer = () => {
             
             <List disablePadding>
               {policies.map((policy) => (
-                <ListItem key={policy.name} disablePadding disableGutters sx={{ mb: 0.5 }}>
+                <ListItem key={policy.name} disablePadding disableGutters sx={{ mb: 1 }}>
                   <FooterLink href={policy.url}>
                     {policy.name}
                   </FooterLink>
@@ -340,14 +342,14 @@ const Footer = () => {
               justifyContent={isMobile ? 'center' : 'flex-end'}
               sx={{ mb: isMobile ? 2 : 0 }}
             >
-              <FooterLink href="#" variant="body2" color="grey.500">
-                Sitemap
+              <FooterLink href="/" variant="body2" color="grey.500">
+                Home
               </FooterLink>
-              <FooterLink href="#" variant="body2" color="grey.500">
-                Accessibility
+              <FooterLink href="/about" variant="body2" color="grey.500">
+                About
               </FooterLink>
-              <FooterLink href="#" variant="body2" color="grey.500">
-                Legal
+              <FooterLink href="/contact" variant="body2" color="grey.500">
+                Contact
               </FooterLink>
             </Stack>
           </Grid>

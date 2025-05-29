@@ -11,8 +11,9 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { ExploreOutlined, KeyboardArrowDown } from '@mui/icons-material';
-import img from "../assets/pour.png"
-// Styled components for better organization and reusability
+import heroImage from "../assets/img.png"; // Make sure this path is correct
+
+// Styled components
 const HeroWrapper = styled(Box)(({ theme }) => ({
   position: 'relative',
   minHeight: '90vh',
@@ -30,7 +31,6 @@ const ParallaxBackground = styled(Box)(({ theme }) => ({
   left: 0,
   width: '100%',
   height: '100%',
-  backgroundImage: {img},
   backgroundSize: 'cover',
   backgroundPosition: 'center',
   transform: 'scale(1.1)', // Slightly larger for parallax effect
@@ -141,6 +141,7 @@ const HeroSection = () => {
       {/* Parallax Background with scroll effect */}
       <ParallaxBackground 
         sx={{ 
+          backgroundImage: `url(${heroImage})`,
           transform: `scale(1.1) translateY(${scrollOffset * 0.2}px)`,
           opacity: 0.9 - (scrollOffset * 0.001) // Fade slightly on scroll
         }} 
@@ -174,7 +175,7 @@ const HeroSection = () => {
                 fontSize: { xs: '0.8rem', sm: '0.9rem' }
               }}
             >
-              DISCOVER THE WORLD
+              PREMIUM COFFEE EXPERIENCE
             </Typography>
             
             <Typography
@@ -194,7 +195,7 @@ const HeroSection = () => {
                 mb: 2
               }}
             >
-              Travel Without Limits
+              Artisanal Coffee Crafted with Passion
             </Typography>
             
             <Typography
@@ -209,8 +210,8 @@ const HeroSection = () => {
                 mb: 4
               }}
             >
-              Create lifetime memories in unforgettable locations around the world.
-              Explore breathtaking destinations with extraordinary experiences.
+              Discover the perfect blend of quality and flavor in every cup. 
+              Our carefully selected beans and expert roasting create an unforgettable coffee experience.
             </Typography>
             
             <Box sx={{ display: 'flex', gap: 2, mt: 2, flexWrap: 'wrap' }}>
@@ -226,7 +227,7 @@ const HeroSection = () => {
                   },
                 }}
               >
-                Explore Destinations
+                Explore Our Blends
               </HeroButton>
               
               <HeroButton
@@ -240,7 +241,7 @@ const HeroSection = () => {
                   },
                 }}
               >
-                View Packages
+                Visit Our Café
               </HeroButton>
             </Box>
             
@@ -264,7 +265,7 @@ const HeroSection = () => {
                 variant="body2"
                 sx={{ fontWeight: 500, opacity: 0.7 }}
               >
-                Over 1000+ destinations worldwide
+                Ethically sourced beans from around the world
               </Typography>
             </Box>
           </Stack>

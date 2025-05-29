@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Grid,
@@ -32,25 +32,8 @@ import AssessmentIcon from "@mui/icons-material/Assessment";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
-
-// Mock Data (replace with actual data fetching logic)
-const mockData = {
-  totalProducts: 156,
-  salesToday: 24,
-  lowStockItems: 8,
-  recentSales: [
-    { id: "#1001", product: "Product A", amount: "$120.00", time: "10:30 AM" },
-    { id: "#1002", product: "Product B", amount: "$85.50", time: "11:45 AM" },
-    { id: "#1003", product: "Product C", amount: "$210.00", time: "1:15 PM" },
-    { id: "#1004", product: "Product D", amount: "$65.25", time: "2:30 PM" },
-    { id: "#1005", product: "Product A", amount: "$120.00", time: "3:45 PM" },
-  ],
-  lowStockProducts: [
-    { name: "Product X", stock: 2, threshold: 5 },
-    { name: "Product Y", stock: 3, threshold: 10 },
-    { name: "Product Z", stock: 1, threshold: 3 },
-  ]
-};
+import CategoryIcon from "@mui/icons-material/Category";
+import PeopleIcon from "@mui/icons-material/People";
 
 // Quick Action Button Component
 const QuickActionButton = ({ title, icon, to, color }) => {
@@ -141,75 +124,143 @@ const Dashboard = () => {
   const user = currentUser?.user;
   
   const [loading, setLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState({
+    totalCategories: 0,
+    totalProducts: 0,
+    totalSales: 0,
+    totalCustomers: 0,
+    salesToday: 0,
+    lowStockItems: 0,
+    recentSales: [],
+    lowStockProducts: []
+  });
+
+  const fetchDashboardData = useCallback(async () => {
+    setLoading(true);
+    try {
+      // Fetch all dashboard data concurrently
+      const [categoriesResponse, productsResponse, salesResponse, customersResponse] = await Promise.all([
+        api.get("api/v1/categories").catch(err => ({ data: { data: { total: 0 } } })),
+        api.get("api/v1/products").catch(err => ({ data: { data: { total: 0 } } })),
+        api.get("api/v1/sales").catch(err => ({ data: { data: { total: 0 } } })),
+        api.get("api/v1/customers").catch(err => ({ data: { data: { total: 0 } } }))
+      ]);
+      
+      // Extract totals from responses
+      const totalCategories = categoriesResponse.data?.data?.total;
+      const totalProducts = productsResponse.data?.data?.total ;
+      const totalSales = salesResponse.data?.data?.total ;
+      const totalCustomers = customersResponse.data?.data?.total ;
+      
+      console.log("Dashboard data:", {
+        totalCategories,
+        totalProducts,
+        totalSales,
+        totalCustomers
+      });
+      
+      setDashboardData(prev => ({
+        ...prev,
+        totalCategories,
+        totalProducts,
+        totalSales,
+        totalCustomers
+      }));
+    } catch (error) {
+      console.error("Failed to fetch dashboard data:", error);
+      // You might want to add error handling here
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    // Simulate an API call to fetch dashboard data
-    setTimeout(() => {
-      setLoading(false); // Stop loading after mock data is loaded
-    }, 1000);
-  }, []);
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   const renderRecentSales = () => (
     <List sx={{ width: "100%" }}>
-      {mockData.recentSales.map((sale, index) => (
-        <React.Fragment key={index}>
-          <ListItem
-            secondaryAction={
-              <Typography variant="body2" color="textSecondary">
-                {sale.time}
-              </Typography>
-            }
-          >
-            <ListItemAvatar>
-              <Avatar sx={{ bgcolor: theme.palette.success.light }}>
-                <PointOfSaleIcon color="success" />
-              </Avatar>
-            </ListItemAvatar>
-            <ListItemText
-              primary={`${sale.id} - ${sale.product}`}
-              secondary={sale.amount}
-              primaryTypographyProps={{ fontWeight: "medium" }}
-              secondaryTypographyProps={{ color: "success.main", fontWeight: "medium" }}
-            />
-          </ListItem>
-          {index < mockData.recentSales.length - 1 && (
-            <Divider variant="inset" component="li" />
-          )}
-        </React.Fragment>
-      ))}
+      {dashboardData.recentSales.length > 0 ? (
+        dashboardData.recentSales.map((sale, index) => (
+          <React.Fragment key={index}>
+            <ListItem
+              secondaryAction={
+                <Typography variant="body2" color="textSecondary">
+                  {sale.time}
+                </Typography>
+              }
+            >
+              <ListItemAvatar>
+                <Avatar sx={{ bgcolor: theme.palette.success.light }}>
+                  <PointOfSaleIcon color="success" />
+                </Avatar>
+              </ListItemAvatar>
+              <ListItemText
+                primary={`${sale.id} - ${sale.product}`}
+                secondary={sale.amount}
+                primaryTypographyProps={{ fontWeight: "medium" }}
+                secondaryTypographyProps={{ color: "success.main", fontWeight: "medium" }}
+              />
+            </ListItem>
+            {index < dashboardData.recentSales.length - 1 && (
+              <Divider variant="inset" component="li" />
+            )}
+          </React.Fragment>
+        ))
+      ) : (
+        <ListItem>
+          <ListItemText
+            primary="No recent sales"
+            secondary="Sales will appear here once you start recording them"
+            primaryTypographyProps={{ color: "textSecondary" }}
+            secondaryTypographyProps={{ color: "textSecondary" }}
+          />
+        </ListItem>
+      )}
     </List>
   );
 
   const renderLowStockItems = () => (
     <List sx={{ width: "100%" }}>
-      {mockData.lowStockProducts.map((product, index) => (
-        <React.Fragment key={index}>
-          <ListItem>
-            <ListItemAvatar>
-              <Avatar sx={{ bgcolor: theme.palette.warning.light }}>
-                <WarningIcon color="warning" />
-              </Avatar>
-            </ListItemAvatar>
-            <ListItemText
-              primary={product.name}
-              secondary={`${product.stock} left (threshold: ${product.threshold})`}
-              primaryTypographyProps={{ fontWeight: "medium" }}
-              secondaryTypographyProps={{ color: "warning.main" }}
-            />
-            <Button 
-              variant="outlined" 
-              size="small" 
-              color="warning"
-              startIcon={<LocalShippingIcon />}
-            >
-              Reorder
-            </Button>
-          </ListItem>
-          {index < mockData.lowStockProducts.length - 1 && (
-            <Divider variant="inset" component="li" />
-          )}
-        </React.Fragment>
-      ))}
+      {dashboardData.lowStockProducts.length > 0 ? (
+        dashboardData.lowStockProducts.map((product, index) => (
+          <React.Fragment key={index}>
+            <ListItem>
+              <ListItemAvatar>
+                <Avatar sx={{ bgcolor: theme.palette.warning.light }}>
+                  <WarningIcon color="warning" />
+                </Avatar>
+              </ListItemAvatar>
+              <ListItemText
+                primary={product.name}
+                secondary={`${product.stock} left (threshold: ${product.threshold})`}
+                primaryTypographyProps={{ fontWeight: "medium" }}
+                secondaryTypographyProps={{ color: "warning.main" }}
+              />
+              <Button 
+                variant="outlined" 
+                size="small" 
+                color="warning"
+                startIcon={<LocalShippingIcon />}
+              >
+                Reorder
+              </Button>
+            </ListItem>
+            {index < dashboardData.lowStockProducts.length - 1 && (
+              <Divider variant="inset" component="li" />
+            )}
+          </React.Fragment>
+        ))
+      ) : (
+        <ListItem>
+          <ListItemText
+            primary="No low stock items"
+            secondary="All products are well stocked"
+            primaryTypographyProps={{ color: "textSecondary" }}
+            secondaryTypographyProps={{ color: "textSecondary" }}
+          />
+        </ListItem>
+      )}
     </List>
   );
 
@@ -253,30 +304,40 @@ const Dashboard = () => {
 
         {/* Key Metrics */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} sm={6} lg={3}>
+            <StatCard 
+              title="Total Categories" 
+              value={dashboardData.totalCategories} 
+              icon={<CategoryIcon fontSize="large" />}
+              color={theme.palette.info.main}
+              trend="+2 this month"
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} lg={3}>
             <StatCard 
               title="Total Products" 
-              value={mockData.totalProducts} 
+              value={dashboardData.totalProducts} 
               icon={<InventoryIcon fontSize="large" />}
               color={theme.palette.primary.main}
               trend="+12% this month"
             />
           </Grid>
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} sm={6} lg={3}>
             <StatCard 
-              title="Sales Today" 
-              value={mockData.salesToday} 
+              title="Total Sales" 
+              value={dashboardData.totalSales} 
               icon={<PointOfSaleIcon fontSize="large" />}
               color={theme.palette.success.main}
-              trend="+5 from yesterday"
+              trend="+8% this week"
             />
           </Grid>
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} sm={6} lg={3}>
             <StatCard 
-              title="Low Stock Items" 
-              value={mockData.lowStockItems} 
-              icon={<WarningIcon fontSize="large" />}
-              color={theme.palette.warning.main}
+              title="Total Customers" 
+              value={dashboardData.totalCustomers} 
+              icon={<PeopleIcon fontSize="large" />}
+              color={theme.palette.secondary.main}
+              trend="+15 this month"
             />
           </Grid>
         </Grid>

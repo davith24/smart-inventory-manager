@@ -24,43 +24,20 @@ import {
   Avatar,
   Chip,
   MenuItem,
-  TableFooter,
 } from "@mui/material";
 import {
-  Edit,
-  Delete,
   Search,
   Add,
   Receipt,
-  CheckCircle,
-  Cancel,
+  Visibility,
+  Delete,
   AttachMoney,
-  Remove,
 } from "@mui/icons-material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import MainLayout from "../../layouts/MainLayout";
 import api from "../../api/axiosConfig";
-
-const STATUS_OPTIONS = ["completed", "pending", "cancelled"];
-
-const StatusChip = ({ status }) => {
-  const colorMap = {
-    completed: "success",
-    pending: "warning",
-    cancelled: "error",
-  };
-
-  return (
-    <Chip
-      label={status}
-      color={colorMap[status] || "default"}
-      size="small"
-      icon={status === "completed" ? <CheckCircle /> : <Cancel />}
-    />
-  );
-};
 
 const SalesManagement = () => {
   const [sales, setSales] = useState([]);
@@ -72,8 +49,6 @@ const SalesManagement = () => {
   const [filter, setFilter] = useState("");
   const [dateFilter, setDateFilter] = useState(null);
   const [productFilter, setProductFilter] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState("");
-  const [quantity, setQuantity] = useState(1);
   const [notification, setNotification] = useState({
     open: false,
     message: "",
@@ -117,12 +92,7 @@ const SalesManagement = () => {
     fetchProducts();
   }, [fetchSales, fetchProducts]);
 
-  console.log(sales)
-
   const filteredSales = sales?.data?.filter((sale) => {
-    // const matchesSearch = sale.products?.product.name?.toLowerCase().includes(filter.toLowerCase()) ||
-    //                      sale.status?.toLowerCase().includes(filter.toLowerCase());
-
     const matchesDate = dateFilter ? 
       new Date(sale.saleDate).toDateString() === new Date(dateFilter).toDateString() : 
       true;
@@ -131,8 +101,7 @@ const SalesManagement = () => {
       sale.products.some(item => item.productId === productFilter) : 
       true;
 
-    // return matchesSearch && matchesDate && matchesProduct;
-        return matchesDate && matchesProduct;
+    return matchesDate && matchesProduct;
   });
 
   const calculateTotal = (items) => {
@@ -144,117 +113,13 @@ const SalesManagement = () => {
   };
 
   const handleOpenDialog = (sale) => {
-    setCurrentSale(
-      sale
-        ? { 
-            ...sale,
-            saleDate: new Date(sale.saleDate)
-          }
-        : { 
-            customerName: "", 
-            saleDate: new Date(), 
-            status: "completed",
-            products: [],
-          }
-    );
+    setCurrentSale(sale);
     setOpenDialog(true);
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setCurrentSale(null);
-    setDialogLoading(false);
-    setSelectedProduct("");
-    setQuantity(1);
-  };
-
-  const handleDialogInputChange = (event) => {
-    const { name, value } = event.target;
-    setCurrentSale((prevSale) => ({
-      ...prevSale,
-      [name]: value,
-    }));
-  };
-
-  const handleAddProduct = () => {
-    if (!selectedProduct || quantity <= 0) return;
-
-    const existingIndex = currentSale.products.findIndex(
-      item => item.productId === selectedProduct
-    );
-
-    if (existingIndex >= 0) {
-      // Update quantity if product already exists
-      const updatedProducts = [...currentSale.products];
-      updatedProducts[existingIndex].quantity += quantity;
-      setCurrentSale(prev => ({
-        ...prev,
-        products: updatedProducts
-      }));
-    } else {
-      // Add new product
-      setCurrentSale(prev => ({
-        ...prev,
-        products: [
-          ...prev.products,
-          {
-            productId: selectedProduct,
-            quantity: quantity
-          }
-        ]
-      }));
-    }
-
-    setSelectedProduct("");
-    setQuantity(1);
-  };
-
-  const handleRemoveProduct = (productId) => {
-    setCurrentSale(prev => ({
-      ...prev,
-      products: prev.products.filter(item => item.productId !== productId)
-    }));
-  };
-
-  const handleSaveSale = async () => {
-    setDialogLoading(true);
-    const isEditing = currentSale && currentSale._id;
-
-    try {
-      const saleData = {
-        customerName: currentSale.customerName,
-        saleDate: currentSale.saleDate,
-        status: currentSale.status,
-        products: currentSale.products,
-      };
-
-      if (isEditing) {
-        await api.patch(`api/v1/sales/${currentSale._id}`, saleData);
-      } else {
-        await api.post("api/v1/sales", saleData);
-      }
-
-      setNotification({
-        open: true,
-        message: isEditing
-          ? "Sale updated successfully!"
-          : "New sale added successfully!",
-        severity: "success",
-      });
-      handleCloseDialog();
-      await fetchSales();
-    } catch (error) {
-      console.error("Failed to save sale:", error);
-      setNotification({
-        open: true,
-        message: `Failed to save sale: ${
-          error.response?.data?.message || error.message || "Unknown error"
-        }`,
-        severity: "error",
-      });
-    } finally {
-      setDialogLoading(false);
-    }
   };
 
   const handleDeleteSale = async (id) => {
@@ -301,18 +166,17 @@ const SalesManagement = () => {
           }}
         >
           <Typography variant="h4" sx={{ fontWeight: 600 }}>
-            Sales
+            Sales Management
           </Typography>
           <Button
             variant="contained"
             startIcon={<Add />}
-            onClick={() => handleOpenDialog(null)}
             sx={{
               bgcolor: "primary.main",
               "&:hover": { bgcolor: "primary.dark" },
             }}
           >
-            Add New Sale
+            New Sale
           </Button>
         </Box>
             
@@ -320,7 +184,7 @@ const SalesManagement = () => {
           <Box sx={{ display: 'flex', gap: 2 }}>
             <TextField
               variant="outlined"
-              label="Search sales..."
+              label="Search by customer..."
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               fullWidth
@@ -374,11 +238,11 @@ const SalesManagement = () => {
               <Table>
                 <TableHead sx={{ bgcolor: "background.default" }}>
                   <TableRow>
+                    <TableCell sx={{ fontWeight: 600 }}>ID</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Customer</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Total Products</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Total Amount</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Date</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Products</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Amount</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
@@ -392,19 +256,12 @@ const SalesManagement = () => {
                           hover
                           sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                         >
+                          <TableCell>{sale._id.substring(0, 6)}...</TableCell>
                           <TableCell>
-                            <Box sx={{ display: "flex", alignItems: "center" }}>
-                              <Avatar sx={{ bgcolor: "primary.main", mr: 2 }}>
-                                <Receipt />
-                              </Avatar>
-                              <Typography>{sale?.userId?.name}</Typography>
-                            </Box>
+                            <Typography>{sale?.userId?.name || 'N/A'}</Typography>
                           </TableCell>
                           <TableCell>
-                            {new Date(sale.saleDate).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>
-                            {sale.products.length} items
+                            {sale.products.length}
                           </TableCell>
                           <TableCell>
                             <Chip
@@ -414,15 +271,15 @@ const SalesManagement = () => {
                             />
                           </TableCell>
                           <TableCell>
-                            <StatusChip status={sale.status} />
+                            {new Date(sale.saleDate).toLocaleDateString()}
                           </TableCell>
                           <TableCell>
-                            <Tooltip title="Edit">
+                            <Tooltip title="View Details">
                               <IconButton
                                 onClick={() => handleOpenDialog(sale)}
                                 color="primary"
                               >
-                                <Edit />
+                                <Visibility />
                               </IconButton>
                             </Tooltip>
                             <Tooltip title="Delete">
@@ -443,13 +300,6 @@ const SalesManagement = () => {
                         <Typography color="text.secondary">
                           No sales found
                         </Typography>
-                        <Button
-                          onClick={() => handleOpenDialog(null)}
-                          startIcon={<Add />}
-                          sx={{ mt: 1 }}
-                        >
-                          Add New Sale
-                        </Button>
                       </TableCell>
                     </TableRow>
                   )}
@@ -459,6 +309,7 @@ const SalesManagement = () => {
           </Card>
         )}
 
+        {/* Sale Details Dialog */}
         <Dialog
           open={openDialog}
           onClose={handleCloseDialog}
@@ -466,165 +317,65 @@ const SalesManagement = () => {
           maxWidth="md"
         >
           <DialogTitle sx={{ bgcolor: "primary.main", color: "white" }}>
-            {currentSale?._id ? "Edit Sale" : "Add New Sale"}
+            Sale Details
             <Receipt sx={{ ml: 1, verticalAlign: "middle" }} />
           </DialogTitle>
           <DialogContent sx={{ pt: 3 }}>
-            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-              <TextField
-                margin="normal"
-                label="Customer Name"
-                fullWidth
-                name="customerName"
-                value={currentSale?.customerName || ""}
-                onChange={handleDialogInputChange}
-              />
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <DatePicker
-                  label="Sale Date"
-                  value={currentSale?.saleDate || new Date()}
-                  onChange={(newValue) => 
-                    setCurrentSale(prev => ({ ...prev, saleDate: newValue }))
-                  }
-                  renderInput={(params) => <TextField {...params} fullWidth />}
-                />
-              </LocalizationProvider>
-            </Box>
-            
-            <TextField
-              select
-              label="Status"
-              name="status"
-              fullWidth
-              value={currentSale?.status || "completed"}
-              onChange={handleDialogInputChange}
-              sx={{ mb: 2 }}
-            >
-              {STATUS_OPTIONS.map((opt) => (
-                <MenuItem key={opt} value={opt}>
-                  {opt.charAt(0).toUpperCase() + opt.slice(1)}
-                </MenuItem>
-              ))}
-            </TextField>
-            
-            <Typography variant="h6" sx={{ mt: 2 }}>
-              Products
-            </Typography>
-            
-            <Box sx={{ display: 'flex', gap: 2, mb: 2, mt: 2 }}>
-              <TextField
-                select
-                label="Product"
-                fullWidth
-                value={selectedProduct}
-                onChange={(e) => setSelectedProduct(e.target.value)}
-              >
-                <MenuItem value="">Select a product</MenuItem>
-                {products?.data?.map((product) => (
-                  <MenuItem key={product._id} value={product._id}>
-                    {product.name} (${product.price.toFixed(2)})
-                  </MenuItem>
-                ))}
-              </TextField>
-              
-               <TextField
-                label="Quantity"
-                type="number"
-                value={quantity}
-                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                inputProps={{ min: 1 }}
-                sx={{ width: '120px' }}
-              />
-              
-              <Button 
-                variant="contained" 
-                onClick={handleAddProduct}
-                disabled={!selectedProduct}
-              >
-                Add
-              </Button>
-            </Box>
-            
-            <TableContainer component={Paper} sx={{ mb: 2 }}>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Product</TableCell>
-                    <TableCell>Price</TableCell>
-                    <TableCell>Quantity</TableCell>
-                    <TableCell>Subtotal</TableCell>
-                    <TableCell>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {currentSale?.products?.map((item) => {
-                    const product = products.data?.find(p => p._id === item.productId);
-                    return (
-                      <TableRow key={item.productId}>
-                        <TableCell>{product?.name || 'Unknown Product'}</TableCell>
-                        <TableCell>${product?.price.toFixed(2) || '0.00'}</TableCell>
-                        <TableCell>{item.quantity}</TableCell>
-                        <TableCell>
-                          ${(product?.price * item.quantity).toFixed(2) || '0.00'}
-                        </TableCell>
-                        <TableCell>
-                          <IconButton 
-                            size="small" 
-                            onClick={() => handleRemoveProduct(item.productId)}
-                            color="error"
-                          >
-                            <Remove />
-                          </IconButton>
-                        </TableCell>
+            {currentSale && (
+              <>
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                    Customer: {currentSale?.userId?.name || 'N/A'}
+                  </Typography>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                    Date: {new Date(currentSale.saleDate).toLocaleDateString()}
+                  </Typography>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                    Total: ${calculateTotal(currentSale.products).toFixed(2)}
+                  </Typography>
+                </Box>
+
+                <Typography variant="h6" sx={{ mt: 2, mb: 2 }}>
+                  Products
+                </Typography>
+                
+                <TableContainer component={Paper}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Product</TableCell>
+                        <TableCell>Price</TableCell>
+                        <TableCell>Quantity</TableCell>
+                        <TableCell>Subtotal</TableCell>
                       </TableRow>
-                    );
-                  })}
-                  {currentSale?.products?.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={5} align="center">
-                        No products added
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-                {currentSale?.products?.length > 0 && (
-                  <TableFooter>
-                    <TableRow>
-                      <TableCell colSpan={3} align="right">
-                        <Typography variant="subtitle1">Total:</Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="subtitle1">
-                          ${calculateTotal(currentSale.products).toFixed(2)}
-                        </Typography>
-                      </TableCell>
-                      <TableCell></TableCell>
-                    </TableRow>
-                  </TableFooter>
-                )}
-              </Table>
-            </TableContainer>
+                    </TableHead>
+                    <TableBody>
+                      {currentSale.products.map((item) => {
+                        const product = products.data?.find(p => p._id === item.productId);
+                        return (
+                          <TableRow key={item.productId}>
+                            <TableCell>{product?.name || 'Unknown Product'}</TableCell>
+                            <TableCell>${product?.price.toFixed(2) || '0.00'}</TableCell>
+                            <TableCell>{item.quantity}</TableCell>
+                            <TableCell>
+                              ${(product?.price * item.quantity).toFixed(2) || '0.00'}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </>
+            )}
           </DialogContent>
           <DialogActions sx={{ p: 2 }}>
             <Button
               onClick={handleCloseDialog}
-              color="inherit"
-              disabled={dialogLoading}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSaveSale}
               color="primary"
               variant="contained"
-              disabled={dialogLoading || currentSale?.products?.length === 0}
-              startIcon={
-                dialogLoading ? (
-                  <CircularProgress size={20} color="inherit" />
-                ) : null
-              }
             >
-              {currentSale?._id ? "Update" : "Create"}
+              Close
             </Button>
           </DialogActions>
         </Dialog>
