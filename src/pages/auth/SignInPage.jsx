@@ -115,9 +115,9 @@ const SignInPage = () => {
       toast.success("Successfully signed in!");
       
       if (userRole === "admin") {
-        navigate("/admin/dashboard");
+        navigate("/dashboard");
       } else {
-        navigate("/client/dashboard");
+        navigate("/dashboard");
       }
     } catch (error) {
       const errorMessage =

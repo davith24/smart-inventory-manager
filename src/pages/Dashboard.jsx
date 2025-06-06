@@ -363,7 +363,7 @@ const Dashboard = () => {
         </Grid>
 
         <Grid container spacing={3}>
-          <Grid item xs={12} md={8}>
+          {/* <Grid item xs={12} md={8}>
             <Card sx={{ borderRadius: "12px", height: "100%" }}>
               <CardContent>
                 <Box
@@ -382,7 +382,7 @@ const Dashboard = () => {
                 {renderRecentSales()}
               </CardContent>
             </Card>
-          </Grid>
+          </Grid> */}
           <Grid item xs={12} md={4}>
             <Card sx={{ borderRadius: "12px", mb: 3 }}>
               <CardContent>
@@ -394,7 +394,7 @@ const Dashboard = () => {
                     <QuickActionButton
                       title="Add New Product"
                       icon={<AddIcon />}
-                      to="/products/add"
+                      to="/products-management"
                       color="primary"
                     />
                   </Grid>
@@ -402,7 +402,7 @@ const Dashboard = () => {
                     <QuickActionButton
                       title="Record a Sale"
                       icon={<PointOfSaleIcon />}
-                      to="/sales/new"
+                      to="/sales-management"
                       color="success"
                     />
                   </Grid>
@@ -418,7 +418,7 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            <Card sx={{ borderRadius: "12px" }}>
+            {/* <Card sx={{ borderRadius: "12px" }}>
               <CardContent>
                 <Box
                   display="flex"
@@ -435,7 +435,7 @@ const Dashboard = () => {
                 </Box>
                 {renderLowStockItems()}
               </CardContent>
-            </Card>
+            </Card> */}
           </Grid>
         </Grid>
       </Box>

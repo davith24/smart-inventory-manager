@@ -175,7 +175,7 @@ const HeroSection = () => {
                 fontSize: { xs: '0.8rem', sm: '0.9rem' }
               }}
             >
-              PREMIUM COFFEE EXPERIENCE
+              SMART INVENTORY SOLUTIONS
             </Typography>
             
             <Typography
@@ -195,7 +195,7 @@ const HeroSection = () => {
                 mb: 2
               }}
             >
-              Artisanal Coffee Crafted with Passion
+              Contact Smart Inventory
             </Typography>
             
             <Typography
@@ -210,12 +210,12 @@ const HeroSection = () => {
                 mb: 4
               }}
             >
-              Discover the perfect blend of quality and flavor in every cup. 
-              Our carefully selected beans and expert roasting create an unforgettable coffee experience.
+              Discover the perfect inventory management solution for your business. 
+              Our smart systems help you track, manage, and optimize your inventory effortlessly.
             </Typography>
             
             <Box sx={{ display: 'flex', gap: 2, mt: 2, flexWrap: 'wrap' }}>
-              <HeroButton
+              {/* <HeroButton
                 variant="contained"
                 color="primary"
                 startIcon={<ExploreOutlined />}
@@ -227,10 +227,10 @@ const HeroSection = () => {
                   },
                 }}
               >
-                Explore Our Blends
-              </HeroButton>
+                Explore Solutions
+              </HeroButton> */}
               
-              <HeroButton
+              {/* <HeroButton
                 variant="outlined"
                 sx={{
                   borderColor: 'rgba(255,255,255,0.5)',
@@ -241,8 +241,8 @@ const HeroSection = () => {
                   },
                 }}
               >
-                Visit Our Café
-              </HeroButton>
+                Request Demo
+              </HeroButton> */}
             </Box>
             
             <Box 
@@ -265,7 +265,7 @@ const HeroSection = () => {
                 variant="body2"
                 sx={{ fontWeight: 500, opacity: 0.7 }}
               >
-                Ethically sourced beans from around the world
+                Advanced inventory tracking for modern businesses
               </Typography>
             </Box>
           </Stack>

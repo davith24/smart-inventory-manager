@@ -342,11 +342,7 @@ const Navbar = () => {
                     <ListItemText>Profile</ListItemText>
                   </MenuItem>
                   <StyledNavLink
-                    to={
-                      user?.roleId?.slug === "admin"
-                        ? "/admin/dashboard"
-                        : "/client/dashboard"
-                    }
+                    to={ "/dashboard"}
                     onClick={handleUserMenuClose}
                   >
                     <MenuItem dense>

@@ -164,7 +164,7 @@ const Footer = () => {
         <Grid container spacing={4}>
           {/* Company Info Column */}
           <Grid item xs={12} md={4}>
-            <Box sx={{ mb: 3, display: 'flex', alignItems: 'center' }}>
+            {/* <Box sx={{ mb: 3, display: 'flex', alignItems: 'center' }}>
               <Box
                 component="img"
                 src={companyLogo}
@@ -179,11 +179,11 @@ const Footer = () => {
               <Typography variant="h6" fontWeight={700} color="white">
                 {companyName}
               </Typography>
-            </Box>
+            </Box> */}
             
-            <Typography variant="body2" color="grey.400" sx={{ mb: 3, maxWidth: 300 }}>
+            {/* <Typography variant="body2" color="grey.400" sx={{ mb: 3, maxWidth: 300 }}>
               We provide exceptional services for your business needs. Our team of experts is dedicated to delivering the best solutions tailored to your requirements.
-            </Typography>
+            </Typography> */}
             
             <Box sx={{ mb: 4 }}>
               <FooterHeading variant="subtitle1">
