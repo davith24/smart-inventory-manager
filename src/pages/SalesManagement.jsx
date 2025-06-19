@@ -55,7 +55,7 @@ const SalesManagement = () => {
   const [products, setProducts] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [categories, setCategories] = useState([]);
-  
+
   // Filter States
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedProduct, setSelectedProduct] = useState("");
@@ -63,7 +63,7 @@ const SalesManagement = () => {
   const [filter, setFilter] = useState("");
   const [dateFilter, setDateFilter] = useState(null);
   const [productFilter, setProductFilter] = useState("");
-  
+
   // UI States
   const [loading, setLoading] = useState(false);
   const [dialogLoading, setDialogLoading] = useState(false);
@@ -75,7 +75,7 @@ const SalesManagement = () => {
     message: "",
     severity: "success",
   });
-  
+
   // New Sale State
   const [newSale, setNewSale] = useState({
     customerId: "",
@@ -163,7 +163,8 @@ const SalesManagement = () => {
   // Computed Values
   const filteredSales = sales?.data?.filter((sale) => {
     const matchesDate = dateFilter
-      ? new Date(sale.saleDate).toDateString() === new Date(dateFilter).toDateString()
+      ? new Date(sale.saleDate).toDateString() ===
+        new Date(dateFilter).toDateString()
       : true;
     const matchesProduct = productFilter
       ? sale.products.some((item) => item.productId === productFilter)
@@ -208,9 +209,11 @@ const SalesManagement = () => {
 
   const handleAddProduct = () => {
     if (!selectedProduct || productQuantity <= 0) return;
-    
+
     setNewSale((prev) => {
-      const existing = prev.products.find((p) => p.productId === selectedProduct);
+      const existing = prev.products.find(
+        (p) => p.productId === selectedProduct
+      );
       const updatedProducts = existing
         ? prev.products.map((p) =>
             p.productId === selectedProduct
@@ -223,7 +226,7 @@ const SalesManagement = () => {
           ];
       return { ...prev, products: updatedProducts };
     });
-    
+
     setSelectedProduct("");
     setProductQuantity(1);
   };
@@ -248,14 +251,14 @@ const SalesManagement = () => {
               phone: newSale.customerPhone,
             }),
       };
-      
+
       await api.post("/api/v1/sales", payload);
       setNotification({
         open: true,
         message: "Sale created successfully!",
         severity: "success",
       });
-      
+
       fetchSales();
       handleCloseCreateDialog();
     } catch (error) {
@@ -311,7 +314,7 @@ const SalesManagement = () => {
                 Manage and track all your sales transactions
               </Typography>
             </Box>
-            
+
             <Button
               variant="contained"
               startIcon={<Add />}
@@ -348,7 +351,7 @@ const SalesManagement = () => {
           <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
             Filters
           </Typography>
-          
+
           <Grid container spacing={3}>
             <Grid item xs={12} md={4}>
               <TextField
@@ -358,7 +361,9 @@ const SalesManagement = () => {
                 onChange={(e) => setFilter(e.target.value)}
                 fullWidth
                 InputProps={{
-                  startAdornment: <Search sx={{ color: "action.active", mr: 1 }} />,
+                  startAdornment: (
+                    <Search sx={{ color: "action.active", mr: 1 }} />
+                  ),
                 }}
                 sx={{
                   "& .MuiOutlinedInput-root": {
@@ -368,7 +373,7 @@ const SalesManagement = () => {
                 }}
               />
             </Grid>
-            
+
             <Grid item xs={12} md={4}>
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DatePicker
@@ -390,7 +395,7 @@ const SalesManagement = () => {
                 />
               </LocalizationProvider>
             </Grid>
-            
+
             <Grid item xs={12} md={4}>
               <TextField
                 select
@@ -457,7 +462,7 @@ const SalesManagement = () => {
                     <TableCell align="center">Actions</TableCell>
                   </TableRow>
                 </TableHead>
-                
+
                 <TableBody>
                   {filteredSales?.length > 0 ? (
                     filteredSales.map((sale, index) => (
@@ -480,21 +485,30 @@ const SalesManagement = () => {
                             #{sale._id.slice(-6).toUpperCase()}
                           </Typography>
                         </TableCell>
-                        
+
                         <TableCell>
-                          <Stack direction="row" alignItems="center" spacing={1}>
+                          <Stack
+                            direction="row"
+                            alignItems="center"
+                            spacing={1}
+                          >
                             <Person sx={{ color: "primary.main" }} />
                             <Box>
                               <Typography variant="body2" fontWeight={600}>
                                 {sale?.customerId?.name || sale.name || "N/A"}
                               </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {sale?.customerId?.phone || sale.phone || "No phone"}
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                {sale?.customerId?.phone ||
+                                  sale.phone ||
+                                  "No phone"}
                               </Typography>
                             </Box>
                           </Stack>
                         </TableCell>
-                        
+
                         <TableCell align="center">
                           <Chip
                             label={`${sale.products.length} items`}
@@ -503,7 +517,7 @@ const SalesManagement = () => {
                             icon={<ShoppingCart />}
                           />
                         </TableCell>
-                        
+
                         <TableCell align="center">
                           <Chip
                             label={formatMoney(sale.totalAmount)}
@@ -514,16 +528,23 @@ const SalesManagement = () => {
                             }}
                           />
                         </TableCell>
-                        
+
                         <TableCell align="center">
-                          <Stack direction="row" alignItems="center" justifyContent="center" spacing={1}>
-                            <CalendarToday sx={{ fontSize: 16, color: "text.secondary" }} />
+                          <Stack
+                            direction="row"
+                            alignItems="center"
+                            justifyContent="center"
+                            spacing={1}
+                          >
+                            <CalendarToday
+                              sx={{ fontSize: 16, color: "text.secondary" }}
+                            />
                             <Typography variant="body2">
                               {formatDate(sale.saleDate)}
                             </Typography>
                           </Stack>
                         </TableCell>
-                        
+
                         <TableCell align="center">
                           <Tooltip title="View Invoice Details" arrow>
                             <IconButton
@@ -547,7 +568,9 @@ const SalesManagement = () => {
                     <TableRow>
                       <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
                         <Stack alignItems="center" spacing={2}>
-                          <ShoppingCart sx={{ fontSize: 60, color: "text.disabled" }} />
+                          <ShoppingCart
+                            sx={{ fontSize: 60, color: "text.disabled" }}
+                          />
                           <Typography variant="h6" color="text.secondary">
                             No sales found
                           </Typography>
@@ -585,7 +608,12 @@ const SalesManagement = () => {
               py: 3,
             }}
           >
-            <Stack direction="row" alignItems="center" justifyContent="center" spacing={1}>
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="center"
+              spacing={1}
+            >
               <Add />
               <Typography variant="h5" fontWeight={700}>
                 Create New Sale
@@ -598,7 +626,7 @@ const SalesManagement = () => {
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
               Customer Information
             </Typography>
-            
+
             <Grid container spacing={3} sx={{ mb: 4 }}>
               <Grid item xs={12}>
                 <FormControl fullWidth>
@@ -660,7 +688,10 @@ const SalesManagement = () => {
                       fullWidth
                       value={newSale.customerPhone}
                       onChange={(e) =>
-                        setNewSale({ ...newSale, customerPhone: e.target.value })
+                        setNewSale({
+                          ...newSale,
+                          customerPhone: e.target.value,
+                        })
                       }
                       sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                     />
@@ -673,7 +704,9 @@ const SalesManagement = () => {
                   <DatePicker
                     label="Sale Date"
                     value={newSale.saleDate}
-                    onChange={(date) => setNewSale({ ...newSale, saleDate: date })}
+                    onChange={(date) =>
+                      setNewSale({ ...newSale, saleDate: date })
+                    }
                     renderInput={(params) => (
                       <TextField
                         {...params}
@@ -692,7 +725,7 @@ const SalesManagement = () => {
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
               Add Products
             </Typography>
-            
+
             <Grid container spacing={3} sx={{ mb: 3 }}>
               <Grid item xs={12} sm={4}>
                 <FormControl fullWidth>
@@ -747,7 +780,9 @@ const SalesManagement = () => {
                   fullWidth
                   value={productQuantity}
                   onChange={(e) =>
-                    setProductQuantity(Math.max(1, parseInt(e.target.value) || 1))
+                    setProductQuantity(
+                      Math.max(1, parseInt(e.target.value) || 1)
+                    )
                   }
                   inputProps={{ min: 1 }}
                   sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
@@ -777,7 +812,7 @@ const SalesManagement = () => {
                 <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
                   Products in Cart ({newSale.products.length} items)
                 </Typography>
-                
+
                 <TableContainer
                   component={Paper}
                   variant="outlined"
@@ -786,20 +821,32 @@ const SalesManagement = () => {
                   <Table size="small">
                     <TableHead>
                       <TableRow sx={{ backgroundColor: "grey.100" }}>
-                        <TableCell><strong>Product</strong></TableCell>
-                        <TableCell><strong>Category</strong></TableCell>
-                        <TableCell align="right"><strong>Unit Price</strong></TableCell>
-                        <TableCell align="right"><strong>Quantity</strong></TableCell>
-                        <TableCell align="right"><strong>Subtotal</strong></TableCell>
-                        <TableCell align="center"><strong>Action</strong></TableCell>
+                        <TableCell>
+                          <strong>Product</strong>
+                        </TableCell>
+                        <TableCell>
+                          <strong>Category</strong>
+                        </TableCell>
+                        <TableCell align="right">
+                          <strong>Unit Price</strong>
+                        </TableCell>
+                        <TableCell align="right">
+                          <strong>Quantity</strong>
+                        </TableCell>
+                        <TableCell align="right">
+                          <strong>Subtotal</strong>
+                        </TableCell>
+                        <TableCell align="center">
+                          <strong>Action</strong>
+                        </TableCell>
                       </TableRow>
                     </TableHead>
-                    
+
                     <TableBody>
                       {newSale.products.map((item) => {
                         const product = getProductDetails(item.productId);
                         const subtotal = (product?.price || 0) * item.quantity;
-                        
+
                         return (
                           <TableRow key={item.productId} hover>
                             <TableCell>
@@ -832,7 +879,9 @@ const SalesManagement = () => {
                             </TableCell>
                             <TableCell align="center">
                               <IconButton
-                                onClick={() => handleRemoveProduct(item.productId)}
+                                onClick={() =>
+                                  handleRemoveProduct(item.productId)
+                                }
                                 color="error"
                                 size="small"
                               >
@@ -842,7 +891,7 @@ const SalesManagement = () => {
                           </TableRow>
                         );
                       })}
-                      
+
                       {/* Total Row */}
                       <TableRow>
                         <TableCell
@@ -922,7 +971,12 @@ const SalesManagement = () => {
               py: 3,
             }}
           >
-            <Stack direction="row" alignItems="center" justifyContent="center" spacing={1}>
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="center"
+              spacing={1}
+            >
               <Receipt />
               <Typography variant="h5" fontWeight={700}>
                 Invoice Details
@@ -1047,7 +1101,7 @@ const SalesManagement = () => {
                 <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
                   Items Purchased
                 </Typography>
-                
+
                 <TableContainer
                   component={Paper}
                   variant="outlined"
@@ -1059,13 +1113,22 @@ const SalesManagement = () => {
                         <TableCell sx={{ color: "white", fontWeight: 700 }}>
                           Product
                         </TableCell>
-                        <TableCell align="right" sx={{ color: "white", fontWeight: 700 }}>
+                        <TableCell
+                          align="right"
+                          sx={{ color: "white", fontWeight: 700 }}
+                        >
                           Unit Price
                         </TableCell>
-                        <TableCell align="right" sx={{ color: "white", fontWeight: 700 }}>
+                        <TableCell
+                          align="right"
+                          sx={{ color: "white", fontWeight: 700 }}
+                        >
                           Quantity
                         </TableCell>
-                        <TableCell align="right" sx={{ color: "white", fontWeight: 700 }}>
+                        <TableCell
+                          align="right"
+                          sx={{ color: "white", fontWeight: 700 }}
+                        >
                           Subtotal
                         </TableCell>
                       </TableRow>
@@ -1152,7 +1215,8 @@ const SalesManagement = () => {
                         p: 2,
                         textAlign: "center",
                         borderRadius: 2,
-                        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                        background:
+                          "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                         color: "white",
                       }}
                     >
@@ -1163,14 +1227,15 @@ const SalesManagement = () => {
                       <Typography variant="body2">Items Sold</Typography>
                     </Card>
                   </Grid>
-                  
+
                   <Grid item xs={12} sm={4}>
                     <Card
                       sx={{
                         p: 2,
                         textAlign: "center",
                         borderRadius: 2,
-                        background: "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
+                        background:
+                          "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
                         color: "white",
                       }}
                     >
@@ -1181,14 +1246,15 @@ const SalesManagement = () => {
                       <Typography variant="body2">Total Revenue</Typography>
                     </Card>
                   </Grid>
-                  
+
                   <Grid item xs={12} sm={4}>
                     <Card
                       sx={{
                         p: 2,
                         textAlign: "center",
                         borderRadius: 2,
-                        background: "linear-gradient(135deg, #fc466b 0%, #3f5efb 100%)",
+                        background:
+                          "linear-gradient(135deg, #fc466b 0%, #3f5efb 100%)",
                         color: "white",
                       }}
                     >

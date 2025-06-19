@@ -4,12 +4,6 @@ import {
   Card,
   Typography,
   Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   TextField,
   Dialog,
   DialogActions,
@@ -151,8 +145,10 @@ const CategoryManagement = () => {
   // Get statistics
   const getStats = () => {
     const total = categories?.data?.length || 0;
-    const active = categories?.data?.filter(cat => cat.status === "active").length || 0;
-    const inactive = categories?.data?.filter(cat => cat.status === "inactive").length || 0;
+    const active =
+      categories?.data?.filter((cat) => cat.status === "active")?.length || 0;
+    const inactive =
+      categories?.data?.filter((cat) => cat.status === "inactive")?.length || 0;
     return { total, active, inactive };
   };
 
@@ -268,373 +264,220 @@ const CategoryManagement = () => {
     setNotification({ ...notification, open: false });
   };
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filteredCategories?.length / itemsPerPage);
+  const paginatedCategories = filteredCategories?.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const goToPrevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
+  const goToNextPage = () =>
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+
   return (
     <MainLayout>
       <Box sx={{ p: 3, maxWidth: "100%", overflow: "hidden" }}>
         {/* Header */}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 4,
-          }}
-        >
-          <Typography 
-            variant="h4" 
-            sx={{ 
-              fontWeight: 700,
-              color: "primary.main",
-              display: "flex",
-              alignItems: "center",
-              gap: 1
-            }}
-          >
-            <Category />
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-2xl font-bold text-gray-600 flex items-center gap-2">
             Category Management
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<Add />}
+          </h1>
+          <button
             onClick={() => handleOpenDialog(null)}
-            sx={{
-              px: 3,
-              py: 1.5,
-              borderRadius: 2,
-              fontWeight: 600,
-              textTransform: "none",
-              boxShadow: 2,
-              "&:hover": { 
-                boxShadow: 4,
-                transform: "translateY(-2px)",
-                transition: "all 0.2s ease-in-out"
-              },
-            }}
+            className="bg-primary text-gray-600 px-4 py-2 rounded-xl font-semibold shadow-md hover:shadow-lg hover:-translate-y-1 transition"
           >
-            Add Category
-          </Button>
-        </Box>
+            <Add className="mr-2 inline" /> Add Category
+          </button>
+        </div>
 
         {/* Statistics Cards */}
-        <Stack 
-          direction={{ xs: "column", sm: "row" }} 
-          spacing={2} 
-          sx={{ mb: 3 }}
-        >
-          <Card 
-            sx={{ 
-              p: 2.5, 
-              flex: 1, 
-              borderRadius: 3,
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              color: "white",
-              boxShadow: "0 4px 20px rgba(102, 126, 234, 0.3)"
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <Box>
-                <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                  {stats.total}
-                </Typography>
-                <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                  Total Categories
-                </Typography>
-              </Box>
-              <Timeline sx={{ fontSize: 40, opacity: 0.8 }} />
-            </Box>
-          </Card>
-
-          <Card 
-            sx={{ 
-              p: 2.5, 
-              flex: 1, 
-              borderRadius: 3,
-              background: "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
-              color: "white",
-              boxShadow: "0 4px 20px rgba(17, 153, 142, 0.3)"
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <Box>
-                <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                  {stats.active}
-                </Typography>
-                <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                  Active Categories
-                </Typography>
-              </Box>
-              <CheckCircle sx={{ fontSize: 40, opacity: 0.8 }} />
-            </Box>
-          </Card>
-
-          <Card 
-            sx={{ 
-              p: 2.5, 
-              flex: 1, 
-              borderRadius: 3,
-              background: "linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)",
-              color: "white",
-              boxShadow: "0 4px 20px rgba(255, 107, 107, 0.3)"
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <Box>
-                <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                  {stats.inactive}
-                </Typography>
-                <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                  Inactive Categories
-                </Typography>
-              </Box>
-              <Cancel sx={{ fontSize: 40, opacity: 0.8 }} />
-            </Box>
-          </Card>
-        </Stack>
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <div className="flex-1 rounded-xl p-6 text-white shadow-lg bg-gradient-to-br from-indigo-500 to-purple-600">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-3xl font-bold">{stats.total}</h2>
+                <p className="opacity-90">Total Categories</p>
+              </div>
+              <Timeline className="text-white text-4xl opacity-70" />
+            </div>
+          </div>
+          <div className="flex-1 rounded-xl p-6 text-white shadow-lg bg-gradient-to-br from-emerald-600 to-green-400">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-3xl font-bold">{stats.active}</h2>
+                <p className="opacity-90">Active Categories</p>
+              </div>
+              <CheckCircle className="text-white text-4xl opacity-70" />
+            </div>
+          </div>
+          <div className="flex-1 rounded-xl p-6 text-white shadow-lg bg-gradient-to-br from-red-500 to-orange-500">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-3xl font-bold">{stats.inactive}</h2>
+                <p className="opacity-90">Inactive Categories</p>
+              </div>
+              <Cancel className="text-white text-4xl opacity-70" />
+            </div>
+          </div>
+        </div>
 
         {/* Filters */}
-        <Card 
-          sx={{ 
-            p: 3, 
-            mb: 3, 
-            borderRadius: 3,
-            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-            border: "1px solid",
-            borderColor: "grey.200"
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-            <FilterList sx={{ mr: 1, color: "primary.main" }} />
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              Filters
-            </Typography>
+        <div className="p-4">
+          <div className="flex items-center mb-2">
+            <FilterList className="mr-2 text-primary" />
+            <h3 className="font-semibold text-lg">Filters</h3>
             {(filter || statusFilter !== "all") && (
-              <Badge 
-                badgeContent="!" 
-                color="primary" 
-                sx={{ ml: 1 }}
-              />
+              <span className="ml-2 inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-900 text-white text-xs">
+                !
+              </span>
             )}
-          </Box>
-          <Divider sx={{ mb: 2 }} />
-          <Stack 
-            direction={{ xs: "column", md: "row" }}
-            spacing={2}
-            alignItems="flex-end"
-          >
-            <TextField
-              variant="outlined"
-              label="Search categories..."
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              sx={{ flex: 1 }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search sx={{ color: "action.active" }} />
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <FormControl sx={{ flex: 1 }}>
-              <InputLabel>Status Filter</InputLabel>
-              <Select
-                label="Status Filter"
+          </div>
+          <hr className="mb-4" />
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search categories..."
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+            </div>
+            <div className="flex-1">
+              <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               >
-                <MenuItem value="all">All Statuses</MenuItem>
-                <MenuItem value="active">Active Only</MenuItem>
-                <MenuItem value="inactive">Inactive Only</MenuItem>
-              </Select>
-            </FormControl>
-            <Button
-              variant="outlined"
-              onClick={clearFilters}
-              startIcon={<Clear />}
-              sx={{ minWidth: "auto", px: 2 }}
-            >
-              Clear
-            </Button>
-          </Stack>
-        </Card>
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
+        </div>
 
         {/* Category Table */}
         {loading ? (
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              minHeight: "400px",
-            }}
-          >
-            <CircularProgress size={60} />
-          </Box>
+          <div className="flex justify-center items-center min-h-[400px]">
+            <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          </div>
         ) : (
-          <Card 
-            sx={{ 
-              borderRadius: 3, 
-              overflow: "hidden",
-              boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-              border: "1px solid",
-              borderColor: "grey.200"
-            }}
-          >
-            <TableContainer>
-              <Table stickyHeader>
-                <TableHead>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: 700, bgcolor: "grey.50" }}>
-                      Category
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: 700, bgcolor: "grey.50" }}>
-                      Name
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: 700, bgcolor: "grey.50" }}>
-                      Slug
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: 700, bgcolor: "grey.50" }}>
-                      Status
-                    </TableCell>
-                    <TableCell 
-                      sx={{ fontWeight: 700, bgcolor: "grey.50" }}
-                      align="center"
+          <div className="bg-white border border-gray-200 rounded-xl overflow-x-auto shadow-md">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="text-left font-semibold px-6 py-4">ID</th>
+                  <th className="text-left font-semibold px-6 py-4">Name</th>
+                  <th className="text-left font-semibold px-6 py-4">Slug</th>
+                  <th className="text-left font-semibold px-6 py-4">Status</th>
+                  <th className="text-center font-semibold px-6 py-4">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredCategories?.length > 0 ? (
+                  filteredCategories.map((category, index) => (
+                    <tr
+                      key={category._id}
+                      className={`transition duration-200 ease-in-out hover:bg-gray-50 ${
+                        index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                      }`}
                     >
-                      Actions
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filteredCategories?.length > 0 ? (
-                    filteredCategories.map((category, index) => (
-                      <TableRow
-                        key={category._id}
-                        hover
-                        sx={{
-                          "&:hover": {
-                            bgcolor: "action.hover",
-                            transform: "scale(1.002)",
-                            transition: "all 0.2s ease-in-out"
-                          },
-                          bgcolor: index % 2 === 0 ? "grey.25" : "white"
-                        }}
-                      >
-                        <TableCell>
-                          <Box sx={{ display: "flex", alignItems: "center" }}>
-                            <Avatar 
-                              sx={{ 
-                                bgcolor: "primary.main", 
-                                mr: 2,
-                                width: 40,
-                                height: 40
-                              }}
-                            >
-                              <Category />
-                            </Avatar>
-                            <Box>
-                              <Typography 
-                                variant="caption" 
-                                color="text.secondary"
-                                sx={{ fontSize: "0.75rem" }}
-                              >
-                                ID: {category._id.slice(-6)}
-                              </Typography>
-                            </Box>
-                          </Box>
-                        </TableCell>
-                        <TableCell>
-                          <Typography fontWeight="600" variant="body2">
-                            {category.name}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={category.slug || "No slug"}
-                            size="small"
-                            variant="outlined"
-                            color="secondary"
-                            sx={{ 
-                              fontWeight: 500,
-                              fontFamily: "monospace",
-                              fontSize: "0.75rem"
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <StatusChip status={category.status} />
-                        </TableCell>
-                        <TableCell align="center">
-                          <Stack direction="row" spacing={1} justifyContent="center">
-                            <Tooltip title="Edit Category">
-                              <IconButton
-                                onClick={() => handleOpenDialog(category)}
-                                color="primary"
-                                size="small"
-                                sx={{
-                                  "&:hover": {
-                                    bgcolor: "primary.light",
-                                    color: "white"
-                                  }
-                                }}
-                              >
-                                <Edit />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Delete Category">
-                              <IconButton
-                                onClick={() => handleDeleteCategory(category._id)}
-                                color="error"
-                                size="small"
-                                sx={{
-                                  "&:hover": {
-                                    bgcolor: "error.light",
-                                    color: "white"
-                                  }
-                                }}
-                              >
-                                <Delete />
-                              </IconButton>
-                            </Tooltip>
-                          </Stack>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
-                        <Box sx={{ textAlign: "center" }}>
-                          <Category 
-                            sx={{ 
-                              fontSize: 60, 
-                              color: "grey.400", 
-                              mb: 2 
-                            }} 
-                          />
-                          <Typography variant="h6" color="text.secondary" gutterBottom>
-                            No categories found
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                            {filter || statusFilter !== "all" 
-                              ? "Try adjusting your filters" 
-                              : "Get started by adding your first category"
-                            }
-                          </Typography>
-                          <Button
-                            onClick={() => handleOpenDialog(null)}
-                            startIcon={<Add />}
-                            variant="contained"
-                            sx={{ textTransform: "none" }}
+                      <td className="px-6 py-4 font-semibold">
+                        {category._id?.slice(-6)}
+                      </td>
+                      <td className="px-6 py-4 font-medium text-gray-800">
+                        {category.name}
+                      </td>
+                      <td className="px-6 py-4 font-semibold">
+                        <span className="">{category.slug || "No slug"}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {/* <StatusChip status={category.status} /> */}
+                        <span className="text-gren-500 bg-green-100 rounded-full text-center py-2 px-4">
+                          {category.status.charAt(0).toUpperCase() +
+                            category.status.slice(1)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <div className="flex justify-center space-x-2">
+                          <button
+                            onClick={() => handleOpenDialog(category)}
+                            className="text-primary hover:bg-primary/10 rounded p-1 transition"
+                            title="Edit Category"
                           >
-                            Add New Category
-                          </Button>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Card>
+                            <Edit className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCategory(category._id)}
+                            className="text-red-600 hover:bg-red-100 rounded p-1 transition"
+                            title="Delete Category"
+                          >
+                            <Delete className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="text-center py-12 px-6">
+                      <div className="flex flex-col items-center justify-center">
+                        <Category className="w-12 h-12 text-gray-300 mb-3" />
+                        <p className="text-lg text-gray-500 font-semibold mb-1">
+                          No categories found
+                        </p>
+                        <p className="text-sm text-gray-400 mb-4">
+                          {filter || statusFilter !== "all"
+                            ? "Try adjusting your filters"
+                            : "Get started by adding your first category"}
+                        </p>
+                        <button
+                          onClick={() => handleOpenDialog(null)}
+                          className="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-primary/90"
+                        >
+                          <Add className="inline-block mr-1" /> Add New Category
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+
+            {/* Pagination */}
+            {totalPages > 0 && (
+              <div className="flex justify-between items-center p-4 bg-white">
+                <div className="text-sm text-gray-500">
+                  Page {currentPage} of {totalPages}
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={goToPrevPage}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 border rounded disabled:opacity-50 hover:bg-gray-100"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={goToNextPage}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 border rounded disabled:opacity-50 hover:bg-gray-100"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Category Dialog */}
@@ -646,17 +489,17 @@ const CategoryManagement = () => {
           PaperProps={{
             sx: {
               borderRadius: 3,
-              boxShadow: "0 12px 40px rgba(0,0,0,0.15)"
-            }
+              boxShadow: "0 12px 40px rgba(0,0,0,0.15)",
+            },
           }}
         >
-          <DialogTitle 
-            sx={{ 
-              bgcolor: "primary.main", 
+          <DialogTitle
+            sx={{
+              bgcolor: "primary.main",
               color: "white",
               display: "flex",
               alignItems: "center",
-              py: 2.5
+              py: 2.5,
             }}
           >
             <Category sx={{ mr: 1 }} />
@@ -664,7 +507,7 @@ const CategoryManagement = () => {
               {currentCategory?._id ? "Edit Category" : "Add New Category"}
             </Typography>
           </DialogTitle>
-          <DialogContent sx={{ pt: 3, pb: 2 }}>
+          <DialogContent sx={{ mt: 4, pt: 4, pb: 2 }}>
             <Stack spacing={3}>
               <TextField
                 label="Category Name *"
@@ -677,7 +520,7 @@ const CategoryManagement = () => {
                 placeholder="Enter category name..."
                 helperText="This will be used to identify the category"
               />
-              
+
               <FormControl fullWidth>
                 <InputLabel>Status</InputLabel>
                 <Select
@@ -688,13 +531,17 @@ const CategoryManagement = () => {
                 >
                   {FORM_STATUS_OPTIONS.map((opt) => (
                     <MenuItem key={opt} value={opt}>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
                         {opt === "active" ? (
-                          <CheckCircle sx={{ fontSize: 20, color: "success.main" }} />
+                          <CheckCircle
+                            sx={{ fontSize: 20, color: "success.main" }}
+                          />
                         ) : (
                           <Cancel sx={{ fontSize: 20, color: "error.main" }} />
                         )}
-                        {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                        {opt.charAt(0).toUpperCase() + opt?.slice(1)}
                       </Box>
                     </MenuItem>
                   ))}
@@ -721,10 +568,10 @@ const CategoryManagement = () => {
                   <CircularProgress size={20} color="inherit" />
                 ) : null
               }
-              sx={{ 
-                textTransform: "none", 
+              sx={{
+                textTransform: "none",
                 px: 4,
-                fontWeight: 600
+                fontWeight: 600,
               }}
             >
               {currentCategory?._id ? "Update Category" : "Create Category"}
@@ -742,10 +589,10 @@ const CategoryManagement = () => {
           <Alert
             onClose={handleCloseNotification}
             severity={notification.severity}
-            sx={{ 
+            sx={{
               width: "100%",
               borderRadius: 2,
-              fontWeight: 500
+              fontWeight: 500,
             }}
             elevation={6}
             variant="filled"

@@ -13,7 +13,7 @@ import {
   Avatar,
   Paper,
   Divider,
-  CircularProgress
+  CircularProgress,
 } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
@@ -65,7 +65,7 @@ const theme = createTheme({
     MuiTextField: {
       styleOverrides: {
         root: {
-          '& .MuiOutlinedInput-root': {
+          "& .MuiOutlinedInput-root": {
             borderRadius: 8,
           },
         },
@@ -107,13 +107,13 @@ const SignInPage = () => {
       const data = response.data.data;
       const token = data.token;
       const userRole = data.user.roleId.slug;
-      
+
       // Set Authorization header for future API requests
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       dispatch(signInSuccess(data));
 
       toast.success("Successfully signed in!");
-      
+
       if (userRole === "admin") {
         navigate("/dashboard");
       } else {
@@ -160,23 +160,31 @@ const SignInPage = () => {
                   display: { xs: "none", md: "flex" },
                   position: "relative",
                   backgroundColor: "primary.light",
-                  backgroundImage: "linear-gradient(120deg, #5569ff 0%, #7b85ff 100%)",
+                  backgroundImage:
+                    "linear-gradient(120deg, #5569ff 0%, #7b85ff 100%)",
                   alignItems: "center",
                   justifyContent: "center",
                   p: 2,
                 }}
               >
-                <Box sx={{ textAlign: "center", color: "white", zIndex: 1, p: 4 }}>
+                <Box
+                  sx={{ textAlign: "center", color: "white", zIndex: 1, p: 4 }}
+                >
                   <Typography variant="h4" fontWeight="bold" mb={2}>
                     Welcome Back!
                   </Typography>
                   <Typography variant="body1" mb={4}>
-                    Access your account to manage your services and view your dashboard.
+                    Access your account to manage your services and view your
+                    dashboard.
                   </Typography>
                   <img
                     src="https://img.freepik.com/free-vector/computer-login-concept-illustration_114360-7962.jpg?semt=ais_hybrid"
                     alt="Sign In Illustration"
-                    style={{ maxWidth: "80%", borderRadius: "16px", boxShadow: "0 8px 24px rgba(0,0,0,0.2)" }}
+                    style={{
+                      maxWidth: "80%",
+                      borderRadius: "16px",
+                      boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
+                    }}
                   />
                 </Box>
               </Grid>
@@ -201,7 +209,12 @@ const SignInPage = () => {
                   >
                     <LockOutlinedIcon fontSize="large" />
                   </Avatar>
-                  <Typography component="h1" variant="h5" fontWeight="bold" mt={2}>
+                  <Typography
+                    component="h1"
+                    variant="h5"
+                    fontWeight="bold"
+                    mt={2}
+                  >
                     Sign In
                   </Typography>
                   <Typography variant="body2" color="text.secondary" mb={3}>
@@ -246,7 +259,11 @@ const SignInPage = () => {
                               edge="end"
                               aria-label="toggle password visibility"
                             >
-                              {showPassword ? <VisibilityOff /> : <Visibility />}
+                              {showPassword ? (
+                                <VisibilityOff />
+                              ) : (
+                                <Visibility />
+                              )}
                             </IconButton>
                           </InputAdornment>
                         ),
@@ -268,7 +285,11 @@ const SignInPage = () => {
                       fullWidth
                       variant="contained"
                       size="large"
-                      disabled={!formData.usernameOrEmail || !formData.password || loading}
+                      disabled={
+                        !formData.usernameOrEmail ||
+                        !formData.password ||
+                        loading
+                      }
                       sx={{
                         mt: 1,
                         mb: 3,
@@ -277,7 +298,11 @@ const SignInPage = () => {
                       }}
                     >
                       {loading ? (
-                        <CircularProgress size={24} color="inherit" sx={{ position: "absolute" }} />
+                        <CircularProgress
+                          size={24}
+                          color="inherit"
+                          sx={{ position: "absolute" }}
+                        />
                       ) : (
                         "Sign In"
                       )}
@@ -293,10 +318,19 @@ const SignInPage = () => {
 
                     <Grid container justifyContent="center" mt={3}>
                       <Grid item>
-                        <Typography variant="body2" color="text.secondary" component="span">
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          component="span"
+                        >
                           Don't have an account?{" "}
                         </Typography>
-                        <Link href="/signup" variant="body2" fontWeight="medium" underline="hover">
+                        <Link
+                          href="/signup"
+                          variant="body2"
+                          fontWeight="medium"
+                          underline="hover"
+                        >
                           Sign Up
                         </Link>
                       </Grid>

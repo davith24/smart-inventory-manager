@@ -18,8 +18,8 @@ const StoreToken = () => {
 };
 
 const api = axios.create({
-  baseURL: "https://smart-inventory-manager-api.onrender.com",
-  // baseURL: "http://localhost:2003",
+  // baseURL: "https://smart-inventory-manager-api.onrender.com",
+  baseURL: "http://localhost:3000",
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
